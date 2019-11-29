@@ -12,19 +12,22 @@ DEBUG = False
 
 @app.route('/sensor', methods=["POST", "PUT", "GET"])
 def sensor():
-    splitted = request.data.decode("utf-8").split(" ")
-    data = [0, 0, 0]
+    data = request.data.decode("utf-8")
+    splitted = data.split(" ")
+    parsed = [0, 0, 0]
     for i in range(len(splitted)):
-        data[i] = splitted[i]
+        parsed[i] = splitted[i]
 
     parent_folder = "sensor/" + parent(date_folder_str())
     if not os.path.exists(parent_folder):
         os.makedirs(parent_folder)
 
-    print("{} {} {} {}\n".format(datetime_str(), data[0], data[1], wake_reason(data[2])))
-    if get_float(data[1]) > 0:
+    print("{} {} {} {}\n".format(
+        datetime_str(), parsed[0], parsed[1], wake_reason(parsed[2])))
+
+    if get_float(parsed[1]) > 0:
         file = open("sensor/{}.txt".format(date_folder_str()), "a+")
-        file.write("{} {} {} {}\n".format(time_str(), data[0], data[1], data[2]))
+        file.write("{} {}\n".format(time_str(), data))
         file.close()
     return ''
 
