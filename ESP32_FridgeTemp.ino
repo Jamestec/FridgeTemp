@@ -12,7 +12,8 @@
 #define uS_TO_S_FACTOR 1000000  //Conversion factor for micro seconds to seconds
 #define TIME_TO_SLEEP 60        //Time ESP32 will go to sleep (in seconds)
 
-#define VERBOSE 0
+#define TIMEOUT 10 // Stops trying to connect to WiFi after TIMEOUT * 0.5 seconds
+#define VERBOSE 1
 #define PRINT_NEXT_SLEEP 1
 #ifdef TESTING
 #define ADDR "http://192.168.1.122:8090/sensor"
@@ -61,23 +62,21 @@ int print_wakeup_reason()
   switch (wakeup_reason)
   {
     // https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/sleep_modes.html#_CPPv418esp_sleep_source_t
-    case ESP_SLEEP_WAKEUP_EXT0  : Serial.println("Wakeup caused by external signal using RTC_IO"); return 2;
-    case ESP_SLEEP_WAKEUP_EXT1  : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
-    case ESP_SLEEP_WAKEUP_TIMER  : Serial.println("Wakeup caused by timer"); return 1;
-    case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.println("Wakeup caused by touchpad"); break;
-    case ESP_SLEEP_WAKEUP_ULP  : Serial.println("Wakeup caused by ULP program"); break;
-    case ESP_SLEEP_WAKEUP_GPIO  : Serial.println("Wakeup caused by GPIO (from light sleep)"); break;
-    case ESP_SLEEP_WAKEUP_UART  : Serial.println("Wakeup caused by UART (from light sleep)"); break;
-    default : Serial.println("Wakeup was not caused by deep sleep"); break;
+    case ESP_SLEEP_WAKEUP_EXT0  : Serial.printf("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1  : Serial.printf("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER  : Serial.printf("Wakeup caused by timer"); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.printf("Wakeup caused by touchpad"); break;
+    case ESP_SLEEP_WAKEUP_ULP  : Serial.printf("Wakeup caused by ULP program"); break;
+    case ESP_SLEEP_WAKEUP_GPIO  : Serial.printf("Wakeup caused by GPIO (from light sleep)"); break;
+    case ESP_SLEEP_WAKEUP_UART  : Serial.printf("Wakeup caused by UART (from light sleep)"); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep"); break;
   }
-  return 0;
+  Serial.printf(" (%d)\n", wakeup_reason);
+  return wakeup_reason;
 }
 
 bool doWork(int wakeReason)
 {
-  // Fake work - get time
-  // https://www.arduino.cc/en/Tutorial/UdpNTPClient
-
   pinMode(LED_BUILTIN, OUTPUT);
   // Detect WiFi stall
   digitalWrite(LED_BUILTIN, HIGH);
@@ -86,7 +85,7 @@ bool doWork(int wakeReason)
 
   WiFi.begin(ssid, password);
   if (VERBOSE) Serial.println("Connecting to WiFi...");
-  while (WiFi.status() != WL_CONNECTED && wifiCount < 5) {
+  while (WiFi.status() != WL_CONNECTED && wifiCount < TIMEOUT) {
     if (VERBOSE) Serial.print(".");
     wifiCount += 1;
     digitalWrite(LED_BUILTIN, HIGH);
@@ -96,9 +95,9 @@ bool doWork(int wakeReason)
 
   digitalWrite(LED_BUILTIN, LOW);
 
-  if (wifiCount < 5) {
+  if (wifiCount < TIMEOUT) {
 
-    if (VERBOSE) Serial.printf("\n...Connected to %s!\n", ssid);
+    if (VERBOSE) Serial.printf("\n...Connected to %s in %.1f seconds!\n", ssid, 0.5 * wifiCount);
 
     Weather sensor;
     Wire.begin();
@@ -133,7 +132,7 @@ bool doWork(int wakeReason)
     WiFi.disconnect();
     return true;
   } else {
-    if (VERBOSE) Serial.print("Could not connect to WiFi in a suitable timeframe.");
+    if (VERBOSE) Serial.printf("\nCould not connect to WiFi in a suitable timeframe.\n");
     return false;
   }
 }
