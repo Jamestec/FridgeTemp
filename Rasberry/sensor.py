@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
 from flask import Flask, request
+from datetime import datetime, timedelta
 import os
-from time import time
 from helpers import date_str, date_folder_str, time_str, datetime_str, parent, wake_reason
 
 import logging
@@ -11,14 +10,19 @@ log.setLevel(logging.ERROR)
 app = Flask(__name__)
 DEBUG = True
 
-TIME_BETWEEN_READS = 300 # Seconds
+TIME_BETWEEN_READS = 10 # Seconds
+
+BUFFER = 12 * 24 # Whole day's worth
+buffer = []
 
 @app.route('/sensor', methods=["POST", "PUT", "GET"])
 def sensor():
     data = request.data.decode("utf-8")
 
     if "wake" not in data and "humid" not in data:
-        print("{} Unknown: {}\n".format(datetime_str(), data))
+        string = "{} Unknown: {}\n".format(datetime_str(), data)
+        print(string)
+        add_buffer(string)
         return ''
 
     log_datetime = datetime.now()
@@ -48,11 +52,28 @@ def sensor():
             log_datetime = minus_time(log_datetime)
     for line in to_print:
         print(line)
+        add_buffer(line)
     for path, content in to_write:
         with open(path, "a+") as FILE:
             FILE.write(content)
     print("")
     return ''
+
+@app.route('/dumpbuffer', methods=["POST", "PUT", "GET"])
+def dumpbuffer():
+    return buffer_str()
+
+def add_buffer(string):
+    global buffer
+    buffer.insert(0, string)
+    if len(buffer) > BUFFER:
+        del buffer[BUFFER - 1]
+
+def buffer_str():
+    string = ""
+    for line in buffer:
+        string += line + "<br/>"
+    return string
 
 def parse_val(key, val):
     f = ["temp", "humid", "volt", "batVolt"]
