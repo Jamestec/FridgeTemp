@@ -1,11 +1,17 @@
 #define uS_TO_S_FACTOR 1000000  // Conversion factor for micro seconds to seconds
+const unsigned long timer_start_delay = 350000; // Microseconds
 
 void doDeepSleep(int sleepSeconds) {
-  unsigned long sleepTime = sleepSeconds * uS_TO_S_FACTOR - esp_timer_get_time() - timer_start_delay;
-  if (VERBOSE) Serial.printf("Setup ESP32 to sleep for every %d Seconds (%lu micro-seconds)\n", SLEEP_TIME, sleepTime);
+  unsigned long sleepTime = sleepSeconds * uS_TO_S_FACTOR;
+  unsigned long offset = esp_timer_get_time() + timer_start_delay;
+  if (offset > sleepTime) {
+    offset = sleepTime - 1;
+  }
+  sleepTime -= offset;
+  if (VERBOSE) Serial.printf("Setup ESP32 to sleep for %d Seconds (%lu micro-seconds)\n", SLEEP_TIME, sleepTime);
   esp_sleep_enable_timer_wakeup(sleepTime);
-  if (VERBOSE) Serial.printf("Setting ESP32 to wakeup on LOW on GPIO 33\n");
-  //esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, LOW);
+//  if (VERBOSE) Serial.printf("Setting ESP32 to wakeup on LOW on GPIO 33\n");
+//  esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, LOW);
   if (VERBOSE) Serial.println("Starting deep sleep");
   Serial.flush();
   //Go to sleep now
