@@ -1,3 +1,5 @@
+from datetime import datetime
+
 def date_str(date=None):
     '''E.g. 2019-10-29'''
     if date is None:
