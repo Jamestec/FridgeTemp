@@ -11,7 +11,7 @@ log.setLevel(logging.ERROR)
 app = Flask(__name__)
 DEBUG = True
 
-TIME_BETWEEN_READS = 10 # Seconds
+TIME_BETWEEN_READS = 300 # Seconds
 
 @app.route('/sensor', methods=["POST", "PUT", "GET"])
 def sensor():
