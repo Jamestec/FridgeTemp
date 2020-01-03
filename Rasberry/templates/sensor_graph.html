@@ -1,0 +1,96 @@
+
+<!doctype html>
+<html>
+
+<head>
+	<title>{{title}}</title>
+	<script src="static/Chart.min.js"></script>
+	<script src="static/utils.js"></script>
+</head>
+
+<body>
+	<div style="width:100%">
+		<canvas id="canvas"></canvas>
+	</div>
+	<script>
+		var lineChartData = {
+			labels: [{% for item in times %}
+                                   "{{ item }}",
+                                 {% endfor %}
+                                ],
+			datasets: [{
+				label: 'Temperature',
+				borderColor: window.chartColors.red,
+				backgroundColor: window.chartColors.red,
+				fill: false,
+				data: {{temp}},
+				yAxisID: 'y-axis-1',
+			}, {
+				label: 'Humidity',
+				borderColor: window.chartColors.blue,
+				backgroundColor: window.chartColors.blue,
+				fill: false,
+				data: {{humid}},
+				yAxisID: 'y-axis-2'
+			}, {
+				label: 'Battery Voltage',
+				borderColor: window.chartColors.yellow,
+				backgroundColor: window.chartColors.yellow,
+				fill: false,
+				data: {{volt}},
+				yAxisID: 'y-axis-3'
+			}]
+		};
+
+		window.onload = function() {
+			var ctx = document.getElementById('canvas').getContext('2d');
+			window.myLine = Chart.Line(ctx, {
+				data: lineChartData,
+				options: {
+					responsive: true,
+					hoverMode: 'index',
+					stacked: false,
+					title: {
+						display: true,
+						text: '{{title}}'
+					},
+					scales: {
+						yAxes: [{
+							type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+							display: true,
+							position: 'left',
+							id: 'y-axis-1',
+						}, {
+							type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+							display: true,
+							position: 'right',
+							id: 'y-axis-2',
+
+							// grid line settings
+							gridLines: {
+								drawOnChartArea: false, // only want the grid lines for one axis to show up
+							},
+						}, {
+							type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+							display: true,
+							position: 'right',
+							id: 'y-axis-3',
+							ticks: {
+								min: 3.5,
+								suggestedMax: 4.3
+							},
+							// grid line settings
+							gridLines: {
+								drawOnChartArea: false, // only want the grid lines for one axis to show up
+							},
+						}],
+					}
+				}
+			});
+
+		};
+
+	</script>
+</body>
+
+</html>
