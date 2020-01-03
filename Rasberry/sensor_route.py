@@ -30,6 +30,8 @@ def sensor_record(data):
             for unknown in dic["unknown"]:
                 print_str += " {}".format(unknown)
             to_print.insert(0, print_str)
+            global last_log
+            last_log_temp = last_log
             if log_datetime >= last_log:
                 # Make folder
                 parent_folder = "sensor/" + parent(date_folder_str(log_datetime))
@@ -40,7 +42,7 @@ def sensor_record(data):
                     path = "sensor/{}.txt".format(date_folder_str(log_datetime))
                     content = "{} {}\n".format(time_str(log_datetime), line)
                     to_write.insert(0, (path, content))
-                last_log = log_datetime
+                last_log_temp = log_datetime
             else:
                 to_print[0] += " <-- not logged"
             log_datetime = minus_time(log_datetime)
@@ -50,6 +52,7 @@ def sensor_record(data):
     for path, content in to_write:
         with open(path, "a+") as FILE:
             FILE.write(content)
+    last_log = last_log_temp
     print("")
     return ''
 
