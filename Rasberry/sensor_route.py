@@ -23,7 +23,7 @@ def sensor_record(data):
         if "temp" in line:
             dic = line_to_dic(line)
             # Prep to print
-            print_str = datetime_str(get_datetime_now(log_datetime))
+            print_str = datetime_str(get_datetime_here(log_datetime))
             for key in dic:
                 if key != "original" and key != "unknown":
                     print_str += " {}={}".format(key, dic[key])
