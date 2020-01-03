@@ -21,7 +21,7 @@ def sensor_record(data):
     to_write = []
     for line in data:
         if "temp" in line:
-            dic = lineToDic(line)
+            dic = line_to_dic(line)
             # Prep to print
             print_str = datetime_str(get_datetime_now(log_datetime))
             for key in dic:
