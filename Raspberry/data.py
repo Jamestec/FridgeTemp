@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from helpers import get_datetime_utc, date_folder_str, get_time, datetime_str, get_datetime
 from helpers import minus_time, add_day, wake_reason
 
-BASE_FOLDER = 'sensor'
+DATA_FOLDER = 'FridgeTemp/Raspberry/sensor'
 
 def get_dirs(parent):
     '''Returns list of full relative path of sub-directories of parent'''
@@ -13,12 +13,12 @@ def get_dirs(parent):
 
 def get_date(log):
     date = log.split('/')
-    date = date[1:]
+    date = date[3:]
     date[-1] = date[-1].split('.')[0]
     return tuple(map(int, date))
 
 def get_latest_log(log=None):
-    '''log should be BASE_FOLDER/year/month/day.txt'''
+    '''log should be DATA_FOLDER/year/month/day.txt'''
     if log is None:
         log = get_latest_log_file()
     with open(log, 'r') as FILE:
@@ -28,7 +28,7 @@ def get_latest_log(log=None):
 
 def get_latest_log_file():
     '''Get relative path to latest log file'''
-    years = get_dirs(BASE_FOLDER)
+    years = get_dirs(DATA_FOLDER)
     years.sort(reverse=True)
     for year in years:
         months = get_dirs(year)
@@ -83,7 +83,7 @@ def get_data(start_dt=None, end_dt=None):
     dt = start_dt.replace(hour=0, minute=0, second=0)
     data = []
     while dt <= end_dt:
-        path = os.path.join(BASE_FOLDER, date_folder_str(dt) + '.txt')
+        path = os.path.join(DATA_FOLDER, date_folder_str(dt) + '.txt')
         try:
             with open(path, 'r') as FILE:
                 date = get_date(path)

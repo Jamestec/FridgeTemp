@@ -1,7 +1,8 @@
-from flask import Flask, request, render_template
 import os
+from flask import Flask, request, render_template
+from subprocess import check_output
 from sensor_route import sensor_record, buffer_str
-from data import get_data, dic_to_graph
+from data import DATA_FOLDER, get_data, dic_to_graph
 
 import logging
 log = logging.getLogger('werkzeug')
@@ -27,6 +28,8 @@ def dumpbuffer():
     return buffer_str()
 
 if __name__ == "__main__":
-    if not os.path.exists("sensor/"):
-        os.mkdir("sensor/")
-    app.run(host='192.168.1.122', port=8090, debug=DEBUG)
+    if not os.path.exists(DATA_FOLDER):
+        os.mkdir(DATA_FOLDER)
+    ip_address = check_output(["hostname", "--all-ip-addresses"]).decode("UTF-8")
+    print("My ip is: {}".format(ip_address))
+    app.run(host=ip_address, port=8090, debug=DEBUG)
