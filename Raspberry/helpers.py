@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-TIME_BETWEEN_READS = 300 # Seconds
+TIME_BETWEEN_READS = 60 # Seconds
 
 def get_local_time_diff(date=None):
     if date is None:
