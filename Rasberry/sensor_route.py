@@ -1,3 +1,4 @@
+import os
 from data import get_latest_log, line_to_dic
 from helpers import get_datetime_utc, get_datetime_here
 from helpers import date_str, date_folder_str, time_str, datetime_str
@@ -32,16 +33,15 @@ def sensor_record(data):
             to_print.insert(0, print_str)
             global last_log
             last_log_temp = last_log
-            if log_datetime >= last_log:
+            if dic["humid"] > 0 and log_datetime >= last_log:
                 # Make folder
                 parent_folder = "sensor/" + parent(date_folder_str(log_datetime))
                 if not os.path.exists(parent_folder):
                     os.makedirs(parent_folder)
                 # Prep to write
-                if dic["humid"] > 0:
-                    path = "sensor/{}.txt".format(date_folder_str(log_datetime))
-                    content = "{} {}\n".format(time_str(log_datetime), line)
-                    to_write.insert(0, (path, content))
+                path = "sensor/{}.txt".format(date_folder_str(log_datetime))
+                content = "{} {}\n".format(time_str(log_datetime), line)
+                to_write.insert(0, (path, content))
                 last_log_temp = log_datetime
             else:
                 to_print[0] += " <-- not logged"
