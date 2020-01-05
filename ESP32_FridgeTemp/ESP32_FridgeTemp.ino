@@ -4,7 +4,7 @@
 #include <HTTPClient.h>
 #include "soc/rtc.h" // rtc_time_get
 
-#define TESTING 0
+#define TESTING 1
 #include "login.h"
 
 #if TESTING
@@ -14,12 +14,12 @@
 #endif
 
 #define VERBOSE 1
-#define SLEEP_TIME 300              // Seconds ESP32 will go to sleep
+#define SLEEP_TIME 60               // Seconds ESP32 will go to sleep
 #define WIFI_DOT_INTERVAL 50        // Milliseconds between checking if WiFi has connected
 #define WIFI_DOT_INTERVAL_SEC 0.05  // WIFI_DOT_INTERVAL / 1000
 #define WIFI_DOT_LINE 20            // Amount of dots before new line for dots
 #define TIMEOUT 200 //62                  // Stops trying to connect to WiFi after TIMEOUT * 0.05 seconds
-#define SEND_INTERVAL 1             // How many measurements before trying to send data by WiFi (Time = SLEEP_TIME * SEND_INTERVAL)
+#define SEND_INTERVAL 5             // How many measurements before trying to send data by WiFi (Time = SLEEP_TIME * SEND_INTERVAL)
 #define OFFLINE_MAX 60              // How many measurements to store in RTC memory (Max RTC memory available is 896 bytes)
 
 // Enums
@@ -90,7 +90,7 @@ int doWork(int wakeReason) {
   Serial.printf("temp=%07.2lf humid=%07.2lf wake=%d\n", temp, humid, wakeReason);
 
   if (VERBOSE && FirstWake) Serial.println("First wake!");
-  if (FirstWake || OfflineCount >= SEND_INTERVAL) {
+  if (FirstWake || OfflineCount % SEND_INTERVAL == 0) {
     int OfflineCountIndex = OfflineCount;
     int tempOfflineCount = OfflineCount;
     if (WrappedOfflineCount) {
