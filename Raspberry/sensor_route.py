@@ -7,6 +7,9 @@ from helpers import minus_time, parent, wake_reason
 BUFFER = 12 * 24 # Whole day's worth
 buffer = []
 
+if not os.path.exists(DATA_FOLDER):
+    os.mkdir(DATA_FOLDER)
+
 last_log = get_latest_log()["datetime"]
 
 def sensor_record(data):

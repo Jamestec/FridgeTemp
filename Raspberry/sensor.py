@@ -28,8 +28,6 @@ def dumpbuffer():
     return buffer_str()
 
 if __name__ == "__main__":
-    if not os.path.exists(DATA_FOLDER):
-        os.mkdir(DATA_FOLDER)
-    ip_address = check_output(["hostname", "--all-ip-addresses"]).decode("UTF-8")
+    ip_address = check_output(["hostname", "--all-ip-addresses"]).decode("UTF-8").split(" ")[0]
     print("My ip is: {}".format(ip_address))
     app.run(host=ip_address, port=8090, debug=DEBUG)
