@@ -22,7 +22,6 @@ var tempData = {
 	type: "line",
 	name: "Temperature",
 	color: temp_color,
-	legendMarkerColor: temp_color,
 	xValueType: "dateTime",
 	axisYType: "primary",
         axisYIndex: 0,
@@ -34,7 +33,6 @@ var humidData = {
 	type: "line",
 	name: "Humidity",
 	color: humid_color,
-	legendMarkerColor: humid_color,
 	xValueType: "dateTime",
 	axisYType: "secondary",
         axisYIndex: 0,
@@ -46,7 +44,6 @@ var voltData = {
 	type: "line",
 	name: "Battery Voltage",
 	color: volt_color,
-	legendMarkerColor: volt_color,
 	xValueType: "dateTime",
 	axisYType: "secondary",
         axisYIndex: 1,
@@ -62,16 +59,19 @@ for (var i = 0; i < limit; i += 1) {
 	var date = new Date(times[i]);
 	tempData.dataPoints.push({
 		x: date,
-		y: temp[i]
+		y: temp[i],
+		markerSize: 7
 	});
 	humidData.dataPoints.push({
 		x: date,
-		y: humid[i]
+		y: humid[i],
+		markerSize: 7
 	});
-	if (volt[i] < 1) volt[i] = undefined;
+	if (volt[i] < 1) volt[i] = 3.7;
 	voltData.dataPoints.push({
 		x: date,
-		y: volt[i]
+		y: volt[i],
+		markerSize: 7
 	});
 }
 data.push(tempData);
@@ -141,16 +141,28 @@ $("#resizable").resizable({
 function toggleDataSeries(e) {
 	if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
 		e.dataSeries.visible = false;
-		if (e.dataSeries.name == "Temperature") {
-			e.chart.axisY[0].set("stripLines", []);
+		switch (e.dataSeries.name) {
+			case "Temperature":
+				e.chart.axisY[0].set("stripLines", []);				
+				break;
+			case "Battery Voltage":
+				e.chart.axisY2[1].set("minimum", 0);
+				e.chart.axisY2[1].set("maximum", 0);
+				break;
 		}
 	} else {
 		e.dataSeries.visible = true;
-		if (e.dataSeries.name == "Temperature") {
-			e.chart.axisY[0].set("stripLines", [
-				{value:25, color:"red", thickness:3},
-				{value:28, color:"red", thickness:3},
-			]);
+		switch (e.dataSeries.name) {
+			case "Temperature":
+				e.chart.axisY[0].set("stripLines", [
+					{value:25, color:"red", thickness:3},
+					{value:28, color:"red", thickness:3},
+				]);			
+				break;
+			case "Battery Voltage":
+				e.chart.axisY2[1].set("minimum", 3.5);
+				e.chart.axisY2[1].set("maximum", 4.3);
+				break;
 		}
 	}
 	e.chart.render();
