@@ -20,7 +20,7 @@ def sensor():
 @app.route('/graph', methods=["POST", "PUT", "GET"])
 def graph():
     times, temp, humid, volt = dic_to_graph(get_data())
-    return render_template('sensor_graph.html', title='Graph of previous 24 hours',
+    return render_template('sensor_graph_jquery.html', title='Graph of previous 24 hours',
                            times=times, temp=temp, humid=humid, volt=volt)
 
 @app.route('/dumpbuffer', methods=["POST", "PUT", "GET"])
