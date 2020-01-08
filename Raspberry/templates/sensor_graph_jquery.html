@@ -94,8 +94,8 @@ var options = {
 		tickColor: temp_color,
 		includeZero: false,
 		stripLines:[
-			{value:25, color:"red", thickness:3},
-			{value:28, color:"red", thickness:3},
+			{value:2, color:"red", thickness:3},
+			{value:8, color:"red", thickness:3},
 		]
 	},
 	axisY2: [
@@ -156,8 +156,8 @@ function toggleDataSeries(e) {
 		switch (e.dataSeries.name) {
 			case "Temperature":
 				e.chart.axisY[0].set("stripLines", [
-					{value:25, color:"red", thickness:3},
-					{value:28, color:"red", thickness:3},
+					{value:2, color:"red", thickness:3},
+					{value:8, color:"red", thickness:3},
 				]);			
 				break;
 			case "Battery Voltage":
