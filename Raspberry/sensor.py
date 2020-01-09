@@ -1,6 +1,7 @@
 import os
-from flask import Flask, request, render_template
+from flask import Flask, request
 from subprocess import check_output
+from graph_route import graph_html
 from sensor_route import sensor_record, buffer_str
 from data import DATA_FOLDER, get_data, dic_to_graph
 
@@ -19,9 +20,7 @@ def sensor():
 @app.route('/', methods=["POST", "PUT", "GET"])
 @app.route('/graph', methods=["POST", "PUT", "GET"])
 def graph():
-    times, temp, humid, volt = dic_to_graph(get_data())
-    return render_template('sensor_graph_jquery.html', title='Graph of previous 24 hours',
-                           times=times, temp=temp, humid=humid, volt=volt)
+    return graph_html(request.values, "Fridge Stats")
 
 @app.route('/dumpbuffer', methods=["POST", "PUT", "GET"])
 def dumpbuffer():

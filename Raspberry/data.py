@@ -117,7 +117,7 @@ def dic_to_graph_dic(data_dic):
     volt = []
     for data in data_dic:
         dt_str = data['datetime'].timestamp()
-        temp.append({r'x': dt_str, r'y': data['temp']})
-        humid.append({r'x': dt_str, r'y': data['humid']})
-        volt.append({r'x': dt_str, r'y': data['volt']})
+        temp.append({'x': dt_str, 'y': data['temp']})
+        humid.append({'x': dt_str, 'y': data['humid']})
+        volt.append({'x': dt_str, 'y': data['volt']})
     return temp, humid, volt
