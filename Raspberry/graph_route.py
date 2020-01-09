@@ -11,6 +11,6 @@ def graph_html(request_values, title="untitled"):
     fromtime = time_str(from_dt)[:-3]
     todate = date_str(to_dt)
     totime = time_str(to_dt)[:-3]
-    return render_template('webtest.html', title=title,
+    return render_template('sensor_graph_jquery.html', title=title,
                            times=times, temp=temp, humid=humid, volt=volt,
                            fromdate=fromdate, fromtime=fromtime, todate=todate, totime=totime)
