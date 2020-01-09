@@ -2,7 +2,7 @@ from flask import render_template
 from helpers import get_datetime_utc, date_str, time_str, get_graph_defaults
 from data import get_data, dic_to_graph
 
-def graph_html(request_values, title="untitled"):
+def graph_html(request_values, title="untitled", html="sensor_graph_jquery.html"):
     from_dt, to_dt = get_graph_defaults(request_values)
     times, temp, humid, volt = dic_to_graph(get_data(
                                                     get_datetime_utc(from_dt),
