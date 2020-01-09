@@ -1,187 +1,49 @@
 <!DOCTYPE HTML>
 <html>
-
 <head>
 <title>{{title}}</title>
-<link href="static/jquery-ui.1.11.2.min.css" rel="stylesheet" />
-
-<script>
-window.onload = function () {
-
-var limit = {{times | length}};
-var times = {{times | safe}};
-var temp = {{temp}};
-var humid = {{humid}};
-var volt = {{volt}};
-
-temp_color = "#C0504E";
-humid_color = "#4F81BC";
-volt_color = "#f0a502";
-
-var data = [];
-var tempData = {
-	type: "line",
-	name: "Temperature",
-	color: temp_color,
-	xValueType: "dateTime",
-	axisYType: "primary",
-        axisYIndex: 0,
-	showInLegend: true,
-	xValueFormatString: "DD/MM/YY HH:mm:ss",
-	yValueFormatString: "##.#0 C",
-};
-var humidData = {
-	type: "line",
-	name: "Humidity",
-	color: humid_color,
-	xValueType: "dateTime",
-	axisYType: "secondary",
-        axisYIndex: 0,
-	showInLegend: true,
-	xValueFormatString: "DD/MM/YY HH:mm:ss",
-	yValueFormatString: "##.#0 '%'",
-};
-var voltData = {
-	type: "line",
-	name: "Battery Voltage",
-	color: volt_color,
-	xValueType: "dateTime",
-	axisYType: "secondary",
-        axisYIndex: 1,
-	showInLegend: true,
-	visible: false,
-	xValueFormatString: "DD/MM/YY HH:mm:ss",
-	yValueFormatString: "#.## v",
-};
-tempData.dataPoints = [];
-humidData.dataPoints = [];
-voltData.dataPoints = [];
-for (var i = 0; i < limit; i += 1) {
-	var date = new Date(times[i]);
-	tempData.dataPoints.push({
-		x: date,
-		y: temp[i],
-		markerSize: 7
-	});
-	humidData.dataPoints.push({
-		x: date,
-		y: humid[i],
-		markerSize: 7
-	});
-	if (volt[i] < 1) volt[i] = 3.7;
-	voltData.dataPoints.push({
-		x: date,
-		y: volt[i],
-		markerSize: 7
-	});
-}
-data.push(tempData);
-data.push(humidData);
-data.push(voltData);
-
-var options = {
-	zoomEnabled: true,
-	rangeChanged: function(e) {remURL();},
-	exportEnabled: true,
-	title: {
-		text: "{{title}}",
-		fontSize: 20,
-		fontWeight: "no"
-	},
-	axisY: {
-		lineColor: temp_color,
-		labelFontColor: temp_color,
-		tickColor: temp_color,
-		includeZero: false,
-		stripLines:[
-			{value:2, color:"red", thickness:3},
-			{value:8, color:"red", thickness:3},
-		]
-	},
-	axisY2: [
-	{
-		lineColor: humid_color,
-		labelFontColor: humid_color,
-		tickColor: humid_color,
-		includeZero: false
-	}, {
-		lineColor: volt_color,
-		labelFontColor: volt_color,
-		tickColor: volt_color,
-		includeZero: false
-	}],
-	toolTip: {
-		shared: true
-	},
-	legend: {
-		cursor: "pointer",
-		itemclick: toggleDataSeries,
-		verticalAlign: "top"
-	},
-	data: data
-};
-
-function remURL() {
-	// Because it gets in the way of resizing
-	$("a").remove(".canvasjs-chart-credit");
-}
-
-$("#resizable").resizable({
-	create: function (event, ui) {
-		//Create chart.
-		$("#chartContainer").CanvasJSChart(options);
-		remURL();
-	},
-	resize: function (event, ui) {
-		//Update chart size according to its container size.
-		$("#chartContainer").CanvasJSChart().render();
-		remURL();
-	}
-});
-
-function toggleDataSeries(e) {
-	if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-		e.dataSeries.visible = false;
-		switch (e.dataSeries.name) {
-			case "Temperature":
-				e.chart.axisY[0].set("stripLines", []);				
-				break;
-			case "Battery Voltage":
-				e.chart.axisY2[1].set("minimum", 0);
-				e.chart.axisY2[1].set("maximum", 0);
-				break;
-		}
-	} else {
-		e.dataSeries.visible = true;
-		switch (e.dataSeries.name) {
-			case "Temperature":
-				e.chart.axisY[0].set("stripLines", [
-					{value:2, color:"red", thickness:3},
-					{value:8, color:"red", thickness:3},
-				]);			
-				break;
-			case "Battery Voltage":
-				e.chart.axisY2[1].set("minimum", 3.5);
-				e.chart.axisY2[1].set("maximum", 4.3);
-				break;
-		}
-	}
-	e.chart.render();
-	remURL();
-}
-
-}
-</script>
-
 </head>
-
 <body>
+
+<center id="data-pick">
+	<table style="width:30%">
+		<tr>
+			<td></td>
+			<td>From</td>
+			<td>To</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>
+				<button style="margin:15px" onclick="clearURLParams()">Reset</button>
+			</td>
+			<td>
+				<input type="date" id="fromDate" name="fromDate" class="dt-pick" value="{{fromdate|safe}}">
+				<input type="time" id="fromTime" name="fromTime" class="dt-pick" value="{{fromtime|safe}}">
+			</td>
+			<td>
+				<input type="date" id="toDate" name="toDate" class="dt-pick" value="{{todate|safe}}">
+				<input type="time" id="toTime" name="toTime" class="dt-pick" value="{{totime|safe}}">
+			</td>
+			<td>
+				<button onclick="submitFromTo()">Show Data</button>
+			</td>
+		</tr>
+	</table>
+</center>
+<script src="static/data-pick.js"></script>
+
+</br>
+
 <div id="resizable" style="height: 600px">
 	<div id="chartContainer" style="height: 100%; width: 100%;"></div>
 </div>
+
 <script src="static/jquery-1.11.1.min.js"></script>
 <script src="static/jquery-ui.1.11.2.min.js"></script>
+<link href="static/jquery-ui.1.11.2.min.css" rel="stylesheet" />
 <script src="static/jquery.canvasjs.min.js"></script>
-</body>
+<script>{% include 'sensor_graph_jquery.js' %}</script>
 
+</body>
 </html>
