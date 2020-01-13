@@ -1,9 +1,10 @@
 import os
 from flask import Flask, request
 from subprocess import check_output
-from graph_route import graph_html
-from sensor_route import sensor_record, buffer_str
-from data import DATA_FOLDER, get_data, dic_to_graph
+from imports import graph_html, \
+                    sensor_record, buffer_str, \
+                    get_data, dic_to_graph, \
+                    DATA_FOLDER
 
 import logging
 log = logging.getLogger('werkzeug')

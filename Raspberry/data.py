@@ -1,9 +1,8 @@
 import os
 from datetime import datetime, timezone
-from helpers import get_datetime_utc, date_folder_str, get_time, datetime_str, get_datetime
-from helpers import minus_time, add_day, wake_reason
-
-DATA_FOLDER = 'FridgeTemp/Raspberry/sensor'
+from imports import get_datetime_utc, date_folder_str, get_time, datetime_str, get_datetime, \
+                    minus_time, add_day, wake_reason, \
+                    DATA_FOLDER
 
 def get_dirs(parent):
     '''Returns list of full relative path of sub-directories of parent'''

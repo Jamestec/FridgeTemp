@@ -1,10 +1,10 @@
 import os
-from data import DATA_FOLDER, get_latest_log, line_to_dic
-from helpers import get_datetime_utc, get_datetime_here
-from helpers import date_str, date_folder_str, time_str, datetime_str
-from helpers import minus_time, parent, wake_reason
+from imports import get_latest_log, line_to_dic, \
+                    get_datetime_utc, get_datetime_here, \
+                    date_str, date_folder_str, time_str, datetime_str, \
+                    minus_time, parent, wake_reason, \
+                    BUFFER, DATA_FOLDER
 
-BUFFER = 12 * 24 # Whole day's worth
 buffer = []
 
 if not os.path.exists(DATA_FOLDER):
