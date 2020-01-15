@@ -42,10 +42,14 @@ function onChanged(id) {
 
 function prevDay() {
 	document.getElementById("fromDate").stepDown(1);
+	onChanged("fromDate");
 	document.getElementById("toDate").stepDown(1);
+	onChanged("toDate");
 }
 
 function nextDay() {
 	document.getElementById("fromDate").stepUp(1);
+	onChanged("fromDate");
 	document.getElementById("toDate").stepUp(1);
+	onChanged("toDate");
 }
