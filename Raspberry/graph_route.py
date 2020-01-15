@@ -54,7 +54,7 @@ def get_graph_defaults(request_values):
         # Override with URL params if available
         if request_values.has_key(key):
             result = request_values[key]
-            if result is not None:
+            if result is not None and result != item:
                 item = result
                 elementChanged.append(key.split("_")[0])
         visible.append(item)

@@ -12,6 +12,8 @@ function submitFromTo() {
 	for (dataSeries of loop) {
 		if (elementChanged.includes(dataSeries)) {
 			url.searchParams.set(dataSeries + "_visible", visible[dataSeries]);
+		} else {
+			url.searchParams.delete(dataSeries + "_visible");
 		}
 	}
 	window.location.href = url.toString();
