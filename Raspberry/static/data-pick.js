@@ -2,10 +2,16 @@ function submitFromTo() {
 	let url = new URL(window.location.href);
 	const params = document.getElementsByClassName("dt-pick");
 	for (i = 0; i < params.length; i++) {
-		if (params[i].value != "") {
+		if (elementChanged.includes(params[i].id) && params[i].value != "") {
 			url.searchParams.set(params[i].name, params[i].value);
 		} else {
 			url.searchParams.delete(params[i].name);
+		}
+	}
+	let loop = ["temp", "humid", "volt"];
+	for (dataSeries of loop) {
+		if (elementChanged.includes(dataSeries)) {
+			url.searchParams.set(dataSeries + "_visible", visible[dataSeries]);
 		}
 	}
 	window.location.href = url.toString();
@@ -24,4 +30,20 @@ function resetdtpick() {
 	document.getElementById("fromTime").defaultValue = time;
 	document.getElementById("toDate").valueAsDate  = dt;
 	document.getElementById("toTime").defaultValue = time;
+}
+
+function onChanged(id) {
+	if (!elementChanged.includes(id)) {
+		elementChanged.push(id);
+	}
+}
+
+function prevDay() {
+	document.getElementById("fromDate").stepDown(1);
+	document.getElementById("toDate").stepDown(1);
+}
+
+function nextDay() {
+	document.getElementById("fromDate").stepUp(1);
+	document.getElementById("toDate").stepUp(1);
 }

@@ -10,38 +10,52 @@ const temp_color = "#C0504E";
 const humid_color = "#4F81BC";
 const volt_color = "#f0a502";
 
+let volt_min = Math.min(...volt);
+if (volt_min > 3.75 || volt_min == 0) {
+	volt_min = 3.75;
+}
+const volt_max = 4.25
+
+elementChanged = {{elementChanged}};
+visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
+
 let data = [];
 let tempData = {
 	type: "line",
 	name: "Temperature",
+	id: "temp",
 	color: temp_color,
 	xValueType: "dateTime",
 	axisYType: "primary",
         axisYIndex: 0,
 	showInLegend: true,
+	visible: visible["temp"],
 	xValueFormatString: "DD/MM/YY HH:mm:ss",
-	yValueFormatString: "##.#0 C",
+	yValueFormatString: "##.#0°C",
 };
 let humidData = {
 	type: "line",
 	name: "Humidity",
+	id: "humid",
 	color: humid_color,
 	xValueType: "dateTime",
 	axisYType: "secondary",
         axisYIndex: 0,
 	showInLegend: true,
+	visible: visible["humid"],
 	xValueFormatString: "DD/MM/YY HH:mm:ss",
 	yValueFormatString: "##.#0 '%'",
 };
 let voltData = {
 	type: "line",
 	name: "Battery Voltage",
+	id: "volt",
 	color: volt_color,
 	xValueType: "dateTime",
 	axisYType: "secondary",
         axisYIndex: 1,
 	showInLegend: true,
-	visible: false,
+	visible: visible["volt"],
 	xValueFormatString: "DD/MM/YY HH:mm:ss",
 	yValueFormatString: "#.## v",
 };
@@ -113,10 +127,11 @@ let options = {
 	data: data
 };
 
-function remURL() {
-	// Because it gets in the way of resizing
-	$("a").remove(".canvasjs-chart-credit");
+if (visible.volt) {
+	options.axisY2[1].minimum = volt_min;
+	options.axisY2[1].maximum = volt_max;
 }
+
 
 $("#resizable").resizable({
 	create: function (event, ui) {
@@ -131,35 +146,56 @@ $("#resizable").resizable({
 	}
 });
 
+min_temp = Math.min(...temp);
+max_temp = Math.max(...temp);
+document.getElementById("stats").innerHTML = 
+	"Max temp = " + max_temp + "°C<br>Min temp = " + min_temp + "°C";
+
 function toggleDataSeries(e) {
 	if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-		e.dataSeries.visible = false;
+		visible[e.dataSeries.id] = false;
 		switch (e.dataSeries.name) {
 			case "Temperature":
-				e.chart.axisY[0].set("stripLines", []);				
+				e.chart.axisY[0].set("stripLines", []);
+				onChanged("temp");
+				break;
+			case "Humidity":
+				onChanged("humid");
 				break;
 			case "Battery Voltage":
 				e.chart.axisY2[1].set("minimum", 0);
 				e.chart.axisY2[1].set("maximum", 0);
+				onChanged("volt");
 				break;
 		}
 	} else {
-		e.dataSeries.visible = true;
+		visible[e.dataSeries.id] = true;
 		switch (e.dataSeries.name) {
 			case "Temperature":
 				e.chart.axisY[0].set("stripLines", [
 					{value:2, color:"red", thickness:3},
 					{value:8, color:"red", thickness:3},
-				]);			
+				]);
+				onChanged("temp");
+				break;
+			case "Humidity":
+				onChanged("humid");
 				break;
 			case "Battery Voltage":
-				e.chart.axisY2[1].set("minimum", 3.5);
-				e.chart.axisY2[1].set("maximum", 4.3);
+				e.chart.axisY2[1].set("minimum", volt_min);
+				e.chart.axisY2[1].set("maximum", volt_max);
+				onChanged("volt");
 				break;
 		}
 	}
+	e.dataSeries.visible = visible[e.dataSeries.id];
 	e.chart.render();
 	remURL();
+}
+
+function remURL() {
+	// Because it gets in the way of resizing
+	$("a").remove(".canvasjs-chart-credit");
 }
 
 }

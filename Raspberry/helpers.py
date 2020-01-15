@@ -59,28 +59,6 @@ def get_datetime(date, time):
     '''date and time are tuples - year, month, day, hour, minute, seconds'''
     return datetime(date[0], date[1], date[2], time[0], time[1], time[2], tzinfo=timezone.utc)
 
-def get_graph_defaults(request_values):
-    to_dt = get_datetime_here()
-    if request_values.has_key("toDate"):
-        result = get_date(request_values["toDate"])
-        if result is not None:
-            to_dt = to_dt.replace(year=result[0], month=result[1], day=result[2])
-    if request_values.has_key("toTime"):
-        result = get_time(request_values["toTime"])
-        if result is not None:
-            to_dt = to_dt.replace(hour=result[0], minute=result[1], second=result[2])
-
-    from_dt = minus_time(to_dt, 86400) # 1 day
-    if request_values.has_key("fromDate"):
-        result = get_date(request_values["fromDate"])
-        if result is not None:
-            from_dt = from_dt.replace(year=result[0], month=result[1], day=result[2])
-    if request_values.has_key("fromTime"):
-        result = get_time(request_values["fromTime"])
-        if result is not None:
-            from_dt = from_dt.replace(hour=result[0], minute=result[1], second=result[2])
-    return from_dt, to_dt
-
 def minus_time(dt, seconds=TIME_BETWEEN_READS):
     return dt - timedelta(seconds=seconds)
 
@@ -99,3 +77,13 @@ def wake_reason(wake_int):
     if wake_int == 4:
         return "timer"
     return str(wake_int)
+
+def get_bool(string):
+    string = string.lower()
+    true = ['true']
+    false = ['false']
+    if string in true:
+        return True
+    if string in false:
+        return False
+    return None

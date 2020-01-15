@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timezone
-from imports import get_datetime_utc, date_folder_str, get_time, datetime_str, get_datetime, \
+from imports import get_datetime_utc, date_folder_str, datetime_str, get_time, get_datetime, \
                     minus_time, add_day, wake_reason, \
                     DATA_FOLDER
 
@@ -10,7 +10,7 @@ def get_dirs(parent):
             for dir in os.listdir(parent)
             if os.path.isdir(os.path.join(parent, dir))]
 
-def get_date(log):
+def get_path_date(log):
     date = log.split('/')
     date = date[3:]
     date[-1] = date[-1].split('.')[0]
@@ -22,7 +22,7 @@ def get_latest_log(log=None):
         log = get_latest_log_file()
     with open(log, 'r') as FILE:
         last = FILE.read().splitlines()[-1]
-    date = get_date(log)
+    date = get_path_date(log)
     return line_to_dic(last, date)
 
 def get_latest_log_file():
@@ -85,7 +85,7 @@ def get_data(start_dt=None, end_dt=None):
         path = os.path.join(DATA_FOLDER, date_folder_str(dt) + '.txt')
         try:
             with open(path, 'r') as FILE:
-                date = get_date(path)
+                date = get_path_date(path)
                 for line in FILE.read().splitlines():
                     read = line_to_dic(line, date)
                     if read['datetime'] >= start_dt and read['datetime'] <= end_dt:

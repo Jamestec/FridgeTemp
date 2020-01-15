@@ -9,21 +9,29 @@
 	<table style="width:30%">
 		<tr>
 			<td></td>
+			<td></td>
 			<td>From</td>
 			<td>To</td>
+			<td></td>
 			<td></td>
 		</tr>
 		<tr>
 			<td>
-				<button style="margin:15px" onclick="clearURLParams()">Reset</button>
+				<button onclick="clearURLParams()">Reset</button>
 			</td>
 			<td>
-				<input type="date" id="fromDate" name="fromDate" class="dt-pick" value="{{fromdate|safe}}">
-				<input type="time" id="fromTime" name="fromTime" class="dt-pick" value="{{fromtime|safe}}">
+				<button style="margin:0px 15px" onclick="prevDay()">Previous Day</button>
 			</td>
 			<td>
-				<input type="date" id="toDate" name="toDate" class="dt-pick" value="{{todate|safe}}">
-				<input type="time" id="toTime" name="toTime" class="dt-pick" value="{{totime|safe}}">
+				<input type="date" id="fromDate" name="fromDate" class="dt-pick" oninput="onChanged(this.id)" value="{{fromdate|safe}}">
+				<input type="time" id="fromTime" name="fromTime" class="dt-pick" oninput="onChanged(this.id)" value="{{fromtime|safe}}">
+			</td>
+			<td>
+				<input type="date" id="toDate" name="toDate" class="dt-pick" oninput="onChanged(this.id)" value="{{todate|safe}}">
+				<input type="time" id="toTime" name="toTime" class="dt-pick" oninput="onChanged(this.id)" value="{{totime|safe}}">
+			</td>
+			<td>
+				<button style="margin:0px 15px" onclick="nextDay()">Next Day</button>
 			</td>
 			<td>
 				<button onclick="submitFromTo()">Show Data</button>
@@ -31,6 +39,9 @@
 		</tr>
 	</table>
 </center>
+
+<div id="loadingGraph">Loading Graph...</div>
+
 <script src="static/data-pick.js"></script>
 
 </br>
@@ -44,6 +55,15 @@
 <link href="static/jquery-ui.1.11.2.min.css" rel="stylesheet" />
 <script src="static/jquery.canvasjs.min.js"></script>
 <script>{% include 'sensor_graph_jquery.js' %}</script>
+
+<center id="stats">
+Max temp = undefined<br>
+Min temp = undefined
+</center>
+
+<script>
+	document.getElementById("loadingGraph").remove();
+</script>
 
 </body>
 </html>
