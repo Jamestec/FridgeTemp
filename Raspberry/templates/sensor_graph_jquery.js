@@ -10,7 +10,7 @@ const temp_color = "#C0504E";
 const humid_color = "#4F81BC";
 const volt_color = "#f0a502";
 
-let volt_min = Math.min(...volt);
+let volt_min = Math.min(...volt) - 0.01;
 if (volt_min > 3.75 || volt_min == 0) {
 	volt_min = 3.75;
 }
