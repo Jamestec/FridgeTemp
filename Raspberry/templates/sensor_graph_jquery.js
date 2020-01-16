@@ -146,10 +146,30 @@ $("#resizable").resizable({
 	}
 });
 
+
+if (volt_min <= 3.77) {
+	let count = 0;
+	let good = volt.length * 0.8;
+	for (item of volt) {
+		if (item <= 3.77) {
+			count += 1;
+			if (count > good) {
+				let loop = document.getElementsByClassName("voltLowWarn");
+				for (item of loop) {
+					item.style.visibility = "visible";
+				}
+				break;
+			}
+		}
+	}
+}
+
 min_temp = Math.min(...temp);
 max_temp = Math.max(...temp);
 document.getElementById("stats").innerHTML = 
 	"Max temp = " + max_temp + "°C<br>Min temp = " + min_temp + "°C";
+
+document.getElementById("loadingGraph").remove();
 
 function toggleDataSeries(e) {
 	if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
