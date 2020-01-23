@@ -77,15 +77,21 @@ if (limit > 1) {
 const THRESHOLD = TIME_BETWEEN_READS / 3;
 for (let i = 0; i < limit; i += 1) {
 	let date = new Date(times[i]);
-	prevDate = fillMissingData(date, prevDate,
-					tempData, humidData, voltData);
+	if (date - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
+		prevDate = new Date(prevDate.getTime() + TIME_BETWEEN_READS);
+		addDataPoint(prevDate, tempData, humidData, voltData,
+				undefined, undefined, undefined);
+	}
 	addDataPoint(date, tempData, humidData, voltData,
 			temp[i], humid[i], volt[i]);
 	prevDate = date;
 }
 let endDate = new Date(document.getElementById("toDate").value + " "+
 			document.getElementById("toTime").value);
-fillMissingData(endDate, prevDate, tempData, humidData, voltData);
+if (endDate - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
+	addDataPoint(endDate, tempData, humidData, voltData,
+				undefined, undefined, undefined);
+}
 data.push(tempData);
 data.push(humidData);
 data.push(voltData);
@@ -221,15 +227,6 @@ function toggleDataSeries(e) {
 function remURL() {
 	// Because it gets in the way of resizing
 	$("a").remove(".canvasjs-chart-credit");
-}
-
-function fillMissingData(date, prevDate, tempData, humidData, voltData) {
-	while (date - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
-		prevDate = new Date(prevDate.getTime() + TIME_BETWEEN_READS);
-		addDataPoint(prevDate, tempData, humidData, voltData,
-				undefined, undefined, undefined);
-	}
-	return prevDate;
 }
 
 function addDataPoint(date, tempData, humidData, voltData, temp, humid, volt) {
