@@ -11,7 +11,7 @@ const humid_color = "#4F81BC";
 const volt_color = "#f0a502";
 
 let volt_min = Math.min(...volt) - 0.01;
-if (volt_min > 3.75 || volt_min == 0) {
+if (volt_min > 3.75 || volt_min == 0 - 0.01) {
 	volt_min = 3.75;
 }
 const volt_max = 4.25
