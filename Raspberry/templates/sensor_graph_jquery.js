@@ -64,7 +64,16 @@ humidData.dataPoints = [];
 voltData.dataPoints = [];
 let prevDate = new Date(document.getElementById("fromDate").value + " "+
 			document.getElementById("fromTime").value);
-const TIME_BETWEEN_READS = {{TIME_BETWEEN_READS}} * 1000;
+var TIME_BETWEEN_READS = {{TIME_BETWEEN_READS}} * 1000;
+if (limit > 1) {
+	let sample = Math.abs(new Date(times[1]) - new Date(times[0]));
+	sample += Math.abs(new Date(times[limit / 2]) - new Date(times[(limit / 2) - 1]));
+	sample += Math.abs(new Date(times[limit - 1]) - new Date(times[limit - 2]));
+	sample /= 3;
+	if (sample > TIME_BETWEEN_READS) {
+		TIME_BETWEEN_READS = sample;
+	}
+}
 const THRESHOLD = TIME_BETWEEN_READS / 3;
 for (let i = 0; i < limit; i += 1) {
 	let date = new Date(times[i]);
