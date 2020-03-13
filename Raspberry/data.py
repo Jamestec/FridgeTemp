@@ -20,6 +20,9 @@ def get_latest_log(log=None):
     '''log should be DATA_FOLDER/year/month/day.txt'''
     if log is None:
         log = get_latest_log_file()
+    if log is None: # There are no records
+        # Fake last log was 1 day ago
+        return {"datetime": minus_time(get_datetime_utc(), 86400)}
     with open(log, 'r') as FILE:
         last = FILE.read().splitlines()[-1]
     date = get_path_date(log)
