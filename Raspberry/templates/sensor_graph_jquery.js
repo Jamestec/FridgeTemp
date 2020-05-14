@@ -230,6 +230,10 @@ function remURL() {
 }
 
 function addDataPoint(date, tempData, humidData, voltData, temp, humid, volt) {
+	if (humid < 0) {
+		temp = undefined;
+		humid = undefined;
+	}
 	tempData.dataPoints.push({
 		x: date,
 		y: temp,
