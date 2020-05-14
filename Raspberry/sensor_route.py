@@ -1,4 +1,5 @@
 import os
+import sys
 from imports import get_latest_log, line_to_dic, \
                     get_datetime_utc, get_datetime_here, \
                     date_str, date_folder_str, time_str, datetime_str, \
@@ -57,6 +58,7 @@ def sensor_record(data):
             FILE.write(content)
     last_log = last_log_temp
     print("")
+    sys.stdout.flush()
     return ''
 
 def add_buffer(string):
