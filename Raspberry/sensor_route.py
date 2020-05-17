@@ -1,4 +1,5 @@
 import os
+import sys
 from imports import get_latest_log, line_to_dic, \
                     get_datetime_utc, get_datetime_here, \
                     date_str, date_folder_str, time_str, datetime_str, \
@@ -36,7 +37,7 @@ def sensor_record(data):
             to_print.insert(0, print_str)
             global last_log
             last_log_temp = last_log
-            if dic["humid"] > 0 and log_datetime >= last_log:
+            if log_datetime >= last_log:
                 path = os.path.join(DATA_FOLDER, date_folder_str(log_datetime) + ".txt")
                 # Make folder
                 parent_folder = parent(path)
@@ -47,7 +48,9 @@ def sensor_record(data):
                 to_write.insert(0, (path, content))
                 last_log_temp = log_datetime
             else:
-                to_print[0] += " <-- not logged"
+                to_print[0] += " <-- not logged (datetime past last log time)"
+            if dic["humid"] < 0:
+                to_print[0] += " <- bad sensor record"
             log_datetime = minus_time(log_datetime)
     for line in to_print:
         print(line)
@@ -57,6 +60,7 @@ def sensor_record(data):
             FILE.write(content)
     last_log = last_log_temp
     print("")
+    sys.stdout.flush()
     return ''
 
 def add_buffer(string):

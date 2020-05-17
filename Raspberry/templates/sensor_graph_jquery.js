@@ -11,7 +11,7 @@ const humid_color = "#4F81BC";
 const volt_color = "#f0a502";
 
 let volt_min = Math.min(...volt) - 0.01;
-if (volt_min > 3.75 || volt_min == 0) {
+if (volt_min > 3.75 || volt_min == 0 - 0.01) {
 	volt_min = 3.75;
 }
 const volt_max = 4.25
@@ -62,24 +62,35 @@ let voltData = {
 tempData.dataPoints = [];
 humidData.dataPoints = [];
 voltData.dataPoints = [];
+let prevDate = new Date(document.getElementById("fromDate").value + " "+
+			document.getElementById("fromTime").value);
+var TIME_BETWEEN_READS = {{TIME_BETWEEN_READS}} * 1000;
+if (limit > 1) {
+	let sample = Math.abs(new Date(times[1]) - new Date(times[0]));
+	sample += Math.abs(new Date(times[limit / 2]) - new Date(times[(limit / 2) - 1]));
+	sample += Math.abs(new Date(times[limit - 1]) - new Date(times[limit - 2]));
+	sample /= 3;
+	if (sample > TIME_BETWEEN_READS) {
+		TIME_BETWEEN_READS = sample;
+	}
+}
+const THRESHOLD = TIME_BETWEEN_READS / 3;
 for (let i = 0; i < limit; i += 1) {
 	let date = new Date(times[i]);
-	tempData.dataPoints.push({
-		x: date,
-		y: temp[i],
-		markerSize: 7
-	});
-	humidData.dataPoints.push({
-		x: date,
-		y: humid[i],
-		markerSize: 7
-	});
-	if (volt[i] < 1) volt[i] = undefined;
-	voltData.dataPoints.push({
-		x: date,
-		y: volt[i],
-		markerSize: 7
-	});
+	if (date - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
+		prevDate = new Date(prevDate.getTime() + TIME_BETWEEN_READS);
+		addDataPoint(prevDate, tempData, humidData, voltData,
+				undefined, undefined, undefined);
+	}
+	addDataPoint(date, tempData, humidData, voltData,
+			temp[i], humid[i], volt[i]);
+	prevDate = date;
+}
+let endDate = new Date(document.getElementById("toDate").value + " "+
+			document.getElementById("toTime").value);
+if (endDate - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
+	addDataPoint(endDate, tempData, humidData, voltData,
+				undefined, undefined, undefined);
 }
 data.push(tempData);
 data.push(humidData);
@@ -216,6 +227,29 @@ function toggleDataSeries(e) {
 function remURL() {
 	// Because it gets in the way of resizing
 	$("a").remove(".canvasjs-chart-credit");
+}
+
+function addDataPoint(date, tempData, humidData, voltData, temp, humid, volt) {
+	if (humid < 0) {
+		temp = undefined;
+		humid = undefined;
+	}
+	tempData.dataPoints.push({
+		x: date,
+		y: temp,
+		markerSize: 7
+	});
+	humidData.dataPoints.push({
+		x: date,
+		y: humid,
+		markerSize: 7
+	});
+	if (volt < 1) volt = undefined;
+	voltData.dataPoints.push({
+		x: date,
+		y: volt,
+		markerSize: 7
+	});
 }
 
 }

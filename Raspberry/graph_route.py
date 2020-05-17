@@ -2,7 +2,7 @@ from flask import render_template
 from imports import get_datetime_utc, get_datetime_here, date_str, time_str, \
                     get_date, get_time, minus_time, \
                     get_data, dic_to_graph, get_bool, \
-                    VISIBLE_KEYS
+                    TIME_BETWEEN_READS, VISIBLE_KEYS
 
 def graph_html(request_values, title="untitled", html="sensor_graph_jquery.html"):
     from_dt, to_dt, vis, elementChanged = get_graph_defaults(request_values)
@@ -17,7 +17,7 @@ def graph_html(request_values, title="untitled", html="sensor_graph_jquery.html"
                            times=times, temp=temp, humid=humid, volt=volt,
                            fromdate=fromdate, fromtime=fromtime, todate=todate, totime=totime,
                            temp_visible=vis[0], humid_visible=vis[1], volt_visible=vis[2],
-                           elementChanged=elementChanged)
+                           elementChanged=elementChanged, TIME_BETWEEN_READS=TIME_BETWEEN_READS)
 
 def get_graph_defaults(request_values):
     elementChanged = []
