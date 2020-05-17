@@ -14,11 +14,11 @@
 #endif
 
 #define VERBOSE 1
-#define SLEEP_TIME 60               // Seconds ESP32 will go to sleep
+#define SLEEP_TIME 180              // Seconds ESP32 will go to sleep
 #define WIFI_DOT_INTERVAL 50        // Milliseconds between checking if WiFi has connected
 #define WIFI_DOT_INTERVAL_SEC 0.05  // WIFI_DOT_INTERVAL / 1000
 #define WIFI_DOT_LINE 20            // Amount of dots before new line for dots
-#define TIMEOUT 200 //62                  // Stops trying to connect to WiFi after TIMEOUT * 0.05 seconds
+#define TIMEOUT 300 //62 //11        // Stops trying to connect to WiFi after TIMEOUT * 0.05 seconds
 #define SEND_INTERVAL 5             // How many measurements before trying to send data by WiFi (Time = SLEEP_TIME * SEND_INTERVAL)
 #define OFFLINE_MAX 60              // How many measurements to store in RTC memory (Max RTC memory available is 896 bytes)
 
@@ -122,7 +122,7 @@ int doWork(int wakeReason) {
     int wifiCount = 0;
 
     WiFi.begin(ssid, password);
-    if (VERBOSE) Serial.print("Connecting to WiFi...");
+    if (VERBOSE) Serial.printf("Connecting to %s...\n", ssid);
     while (WiFi.status() != WL_CONNECTED && wifiCount < TIMEOUT) {
       if (VERBOSE && wifiCount % WIFI_DOT_LINE == 0) Serial.println("");
       if (VERBOSE) Serial.print(".");
@@ -162,7 +162,7 @@ int doWork(int wakeReason) {
       return WORK_SUCCESS;
 
     } else {
-      if (VERBOSE) Serial.printf("\nCould not connect to WiFi in %.2f seconds.\n", TIMEOUT * WIFI_DOT_INTERVAL_SEC);
+      if (VERBOSE) Serial.printf("\nCould not connect to %s in %.2f seconds.\n", ssid, TIMEOUT * WIFI_DOT_INTERVAL_SEC);
       WiFi.disconnect(true);
       WiFi.mode(WIFI_OFF);
       btStop();
