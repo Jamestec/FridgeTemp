@@ -230,8 +230,9 @@ function remURL() {
 }
 
 function addDataPoint(date, tempData, humidData, voltData, temp, humid, volt) {
-	if (humid < 0) {
+	if (temp < -40) { // Specifically, bad temp read is -46.58
 		temp = undefined;
+	if (humid < 0) {
 		humid = undefined;
 	}
 	tempData.dataPoints.push({
