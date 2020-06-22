@@ -85,7 +85,7 @@ for (let i = 0; i < limit; i += 1) {
 				undefined, undefined, undefined);
 	}
 	if (temp[i] > max_temp) { max_temp = temp[i]; }
-	if (temp[i] < min_temp) { min_temp = temp[i]; }
+	if (temp[i] < min_temp && temp[i] > -40) { min_temp = temp[i]; } // Specifically, bad temp read is -46.58
 	addDataPoint(date, tempData, humidData, voltData,
 			temp[i], humid[i], volt[i]);
 	prevDate = date;
