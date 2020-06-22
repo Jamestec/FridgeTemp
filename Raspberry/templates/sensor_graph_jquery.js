@@ -74,6 +74,8 @@ if (limit > 1) {
 		TIME_BETWEEN_READS = sample;
 	}
 }
+min_temp = 500;
+max_temp = -500;
 const THRESHOLD = TIME_BETWEEN_READS / 3;
 for (let i = 0; i < limit; i += 1) {
 	let date = new Date(times[i]);
@@ -82,6 +84,8 @@ for (let i = 0; i < limit; i += 1) {
 		addDataPoint(prevDate, tempData, humidData, voltData,
 				undefined, undefined, undefined);
 	}
+	if (temp[i] > max_temp) { max_temp = temp[i]; }
+	if (temp[i] < min_temp) { min_temp = temp[i]; }
 	addDataPoint(date, tempData, humidData, voltData,
 			temp[i], humid[i], volt[i]);
 	prevDate = date;
@@ -95,6 +99,8 @@ if (endDate - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
 data.push(tempData);
 data.push(humidData);
 data.push(voltData);
+document.getElementById("stats").innerHTML = 
+	"Max temp = " + max_temp + "°C<br>Min temp = " + min_temp + "°C";
 
 let options = {
 	zoomEnabled: true,
@@ -174,11 +180,6 @@ if (volt_min <= 3.77) {
 		}
 	}
 }
-
-min_temp = Math.min(...temp);
-max_temp = Math.max(...temp);
-document.getElementById("stats").innerHTML = 
-	"Max temp = " + max_temp + "°C<br>Min temp = " + min_temp + "°C";
 
 document.getElementById("loadingGraph").remove();
 
