@@ -90,6 +90,8 @@ for (let i = 0; i < limit; i += 1) {
 			temp[i], humid[i], volt[i]);
 	prevDate = date;
 }
+if (min_temp == 500) min_temp = undefined;
+if (max_temp == -500) max_temp = undefined;
 let endDate = new Date(document.getElementById("toDate").value + " "+
 			document.getElementById("toTime").value);
 if (endDate - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
