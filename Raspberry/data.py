@@ -24,7 +24,9 @@ def get_latest_log(log=None):
         # Fake last log was 1 day ago
         return {"datetime": minus_time(get_datetime_utc(), 86400)}
     with open(log, 'r') as FILE:
-        last = FILE.read().splitlines()[-1]
+        # Need to change get_latest_log_file to return file that is not empty
+        # Need to change this function to return latest non-empty line
+        last = FILE.read().splitlines()[-2] # Patch fix change -1 to -2
     date = get_path_date(log)
     return line_to_dic(last, date)
 
