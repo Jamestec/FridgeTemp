@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timezone
-from imports import get_datetime_utc, date_folder_str, datetime_str, get_time, get_datetime, \
+from imports import get_datetime_utc, get_datetime_here, date_folder_str, datetime_str, get_time, get_datetime, \
                     minus_time, add_day, wake_reason, \
                     DATA_FOLDER
 
@@ -106,7 +106,7 @@ def dic_to_graph(data_dic):
     humid = []
     volt = []
     for data in data_dic:
-        dt.append(datetime_str(data['datetime'].astimezone()))
+        dt.append(datetime_str(get_datetime_here(data['datetime'])))
         temp.append(data['temp'])
         humid.append(data['humid'])
         if 'volt' in data:

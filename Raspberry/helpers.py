@@ -1,23 +1,19 @@
 from datetime import datetime, timedelta, timezone
 from imports import TIME_BETWEEN_READS
 
-def get_local_time_diff(date=None):
-    if date is None:
-        date = get_datetime_utc()
-    a = date.replace(tzinfo=timezone.utc)
-    return a.astimezone().replace(tzinfo=timezone.utc) - a
-
+''' Add tzinfo=timezone.utc '''
 def get_datetime_utc(dt=None):
     if dt is None:
         dt = datetime.now(timezone.utc)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc) - get_local_time_diff(dt)
-    return dt.astimezone(timezone.utc)
+        dt = datetime.fromtimestamp(dt.timestamp(), timezone.utc)
+    return dt
 
+''' Strip tzinfo=timezone.utc '''
 def get_datetime_here(dt=None):
     if dt is None:
-        dt = get_datetime_utc()
-    return dt.astimezone()
+        return datetime.now()
+    return datetime.fromtimestamp(dt.timestamp())
 
 def date_str(date=None):
     '''E.g. 2019-10-29'''
