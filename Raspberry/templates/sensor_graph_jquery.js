@@ -10,6 +10,7 @@ const temp_color = "#C0504E";
 const humid_color = "#4F81BC";
 const volt_color = "#f0a502";
 
+// Determine minimum (and max) voltage for axis label
 let volt_min = Math.min(...volt) - 0.01;
 if (volt_min > 3.75 || volt_min == 0 - 0.01) {
 	volt_min = 3.75;
@@ -19,6 +20,7 @@ const volt_max = 4.25
 elementChanged = {{elementChanged}};
 visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
 
+// Setup graph line data stuff
 let data = [];
 let tempData = {
 	type: "line",
@@ -62,9 +64,12 @@ let voltData = {
 tempData.dataPoints = [];
 humidData.dataPoints = [];
 voltData.dataPoints = [];
+// Prep for parsing server data to line data stuff
 let prevDate = new Date(document.getElementById("fromDate").value + " "+
 			document.getElementById("fromTime").value);
 var TIME_BETWEEN_READS = {{TIME_BETWEEN_READS}} * 1000;
+// Determine if {{TIME_BETWEEN_READS}} is appropriate for most of data
+// This may be because ESP32 was changed, but not Raspberry Pi
 if (limit > 1) {
 	let sample = Math.abs(new Date(times[1]) - new Date(times[0]));
 	sample += Math.abs(new Date(times[limit / 2]) - new Date(times[(limit / 2) - 1]));
@@ -77,33 +82,49 @@ if (limit > 1) {
 min_temp = 500;
 max_temp = -500;
 const THRESHOLD = TIME_BETWEEN_READS / 3;
+let sections = {};
+// Loop to fill data points (line data stuff) + other
 for (let i = 0; i < limit; i += 1) {
 	let date = new Date(times[i]);
 	if (date - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
+		// Missing some reads, fill it with fluf so no line
 		prevDate = new Date(prevDate.getTime() + TIME_BETWEEN_READS);
 		addDataPoint(prevDate, tempData, humidData, voltData,
 				undefined, undefined, undefined);
 	}
-	if (temp[i] > max_temp && temp[i] > -40) { max_temp = temp[i]; } // Specifically, bad temp read is -46.58
-	if (temp[i] < min_temp && temp[i] > -40) { min_temp = temp[i]; }
+	if (isGoodTempRead(temp[i])) {
+		// Determine min and max
+		if (temp[i] > max_temp) { max_temp = temp[i]; }
+		if (temp[i] < min_temp) { min_temp = temp[i]; }
+		// Do min/max for sections
+		doSections(sections, date, temp[i], TIME_BETWEEN_READS);
+	}
+	// Add data point
 	addDataPoint(date, tempData, humidData, voltData,
 			temp[i], humid[i], volt[i]);
 	prevDate = date;
 }
+// There were no good sensor reads :(, no min/max
 if (min_temp == 500) min_temp = undefined;
 if (max_temp == -500) max_temp = undefined;
+// Fluff the last sensor to now so there's space on graph
 let endDate = new Date(document.getElementById("toDate").value + " "+
 			document.getElementById("toTime").value);
 if (endDate - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
 	addDataPoint(endDate, tempData, humidData, voltData,
 				undefined, undefined, undefined);
 }
+// Add line data stuff to graph
 data.push(tempData);
 data.push(humidData);
 data.push(voltData);
-document.getElementById("stats").innerHTML = 
-	"Max temp = " + max_temp + "°C<br>Min temp = " + min_temp + "°C";
 
+// Graph statistics
+let stats = "<b>Total date range stats:</b><br>Temperature min/max: " + min_temp + "°C/" + max_temp + "°C" + "<br><br>"
+	+ "<b>Sections:</b><br>" + doSectionString(sections);
+document.getElementById("stats").innerHTML = stats;
+
+// Set graph options/assign data
 let options = {
 	zoomEnabled: true,
 	rangeChanged: function(e) {remURL();},
@@ -165,7 +186,7 @@ $("#resizable").resizable({
 	}
 });
 
-
+// Battery low voltage warning
 if (volt_min <= 3.77) {
 	let count = 0;
 	let good = volt.length * 0.8;
@@ -233,10 +254,10 @@ function remURL() {
 }
 
 function addDataPoint(date, tempData, humidData, voltData, temp, humid, volt) {
-	if (temp < -40) { // Specifically, bad temp read is -46.58
+	if (!isGoodTempRead(temp)) {
 		temp = undefined;
 	}
-	if (humid < 0) {
+	if (!isGoodHumidRead(humid)) {
 		humid = undefined;
 	}
 	tempData.dataPoints.push({
@@ -255,6 +276,129 @@ function addDataPoint(date, tempData, humidData, voltData, temp, humid, volt) {
 		y: volt,
 		markerSize: 7
 	});
+}
+
+function isGoodTempRead(temp) {
+	return temp > -40; // Specifically, bad temp read is -46.58
+}
+
+function isGoodHumidRead(humid) {
+	return humid >= 0;
+}
+
+// Is the time close to opening or closing time
+function isStartOfSection(date) {
+	let startHour = 9;
+	let endHour = 19; // 7pm
+	if (date.getDay() == 0 || date.getDay() == 6) { // Sun or Sat
+		endHour = 18; // 6pm
+	}
+	let minutesBetween = {{TIME_BETWEEN_READS}} / 60;
+	return (date.getMinutes() <= minutesBetween &&
+			(date.getHours() == startHour || date.getHours() == endHour));
+}
+
+function getEndHour(dayOfWeek) {
+	if (dayOfWeek == 0 || dayOfWeek == 6) { // Sun or Sat
+		return 18; // 6pm
+	}
+	return 19; // 7pm
+}
+
+// Get end of section datetime as string
+function getSectionTime(date) {
+	let startHour = 9;
+	let endHour = getEndHour(date.getDay());
+	// Between midnight and open
+	let hour = " Morn";
+	// Between open and close
+	if (date.getHours() >= startHour && date.getHours() < endHour) {
+		hour = " Night";
+	}
+	let addADay = 0;
+	// Between close and midnight
+	if (date.getHours() >= endHour) {
+		addADay = 1;
+	}
+	let ret = new Date(date);
+	ret.setDate(date.getDate() + addADay);
+	//ret.setHours(hour);
+	let day = ret.getDate();
+	if (day < 10) {
+		day = "0" + day;
+	}
+	let month = ret.getMonth() + 1;
+	if (month < 10) {
+		month = "0" + month;
+	}
+	return ret.getFullYear() + "/" + month + "/" + day + hour;
+}
+
+function doSections(sections, date, temp, TIME_BETWEEN_READS) {
+	if (isStartOfSection(date)) {
+		let endSec = getSectionTime(date);
+		if (endSec in sections) {
+			//sections[endSec].push(date + " " + temp + "<br>");
+			if (temp < sections[endSec]["min"]) {
+				sections[endSec]["min"] = temp;
+			} else if (temp > sections[endSec]["max"]) {
+				sections[endSec]["max"] = temp;
+			}
+		} else {
+			//sections[endSec] = [date + " " + temp + "<br>"];
+			sections[endSec] = {
+				"min": temp,
+				"max": temp
+			};
+		}
+	} else {
+		let endSec = getSectionTime(date);
+		if (endSec in sections) {
+			//sections[endSec].push(date + " " + temp + "<br>");
+			if (temp < sections[endSec]["min"]) {
+				sections[endSec]["min"] = temp;
+			} else if (temp > sections[endSec]["max"]) {
+				sections[endSec]["max"] = temp;
+			}
+			if (parseEndSectionString(endSec) - date <= TIME_BETWEEN_READS) {
+				sections[endSec]["end"] = true;
+			}
+		}
+	}
+}
+
+function parseEndSectionString(str) {
+	let s = str.split(" ");
+	let d = new Date(s[0]);
+	if (s[1] == "Morn") {
+		d.setHours(9);
+	} else {
+		d.setHours(getEndHour(d.getDay()));
+	}
+	return d;
+}
+
+function doSectionString(sections) {
+	let sectionString = "";
+	let prevSub = "";
+	for (key in sections) {
+		if (!("end" in sections[key])) {
+			sectionString += "<p style=\"color:red\">";
+		}
+		let sub = key.split(" ");
+		if (prevSub == sub[0]) {
+			sectionString += "---/---/-------- " + sub[1];
+		} else {
+			sectionString += key;
+		}
+		prevSub = sub[0];
+		sectionString += ": " + sections[key]["min"].toFixed(2) + "°C/" + sections[key]["max"].toFixed(2) + "°C";
+		if (!("end" in sections[key])) {
+			sectionString += " --- incomplete data</p>";
+		}
+		sectionString += "<br>";
+	}
+	return sectionString;
 }
 
 }
