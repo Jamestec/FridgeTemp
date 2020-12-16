@@ -7,6 +7,8 @@ char *getSDPath() {
 }
 
 bool appendFile(char *path, char *message) {
+  if (VERBOSE && SD.cardType() != CARD_NONE) Serial.printf("SD card type: %s\n", SD.cardType());
+  if (VERBOSE && SD.cardType() == CARD_NONE) Serial.printf("SD card type: NONE\n");
   if (SD.begin() && SD.cardType() != CARD_NONE) {
     if (VERBOSE) Serial.printf("Appending to file: %s\n", path);
 

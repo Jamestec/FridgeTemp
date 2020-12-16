@@ -18,7 +18,7 @@
 #define WIFI_DOT_INTERVAL 50        // Milliseconds between checking if WiFi has connected
 #define WIFI_DOT_INTERVAL_SEC 0.05  // WIFI_DOT_INTERVAL / 1000
 #define WIFI_DOT_LINE 20            // Amount of dots before new line for dots
-#define TIMEOUT 300 //62 //11        // Stops trying to connect to WiFi after TIMEOUT * 0.05 seconds
+#define TIMEOUT 300 //62 //11       // Stops trying to connect to WiFi after TIMEOUT * 0.05 seconds
 #define SEND_INTERVAL 5             // How many measurements before trying to send data by WiFi (Time = SLEEP_TIME * SEND_INTERVAL)
 #define OFFLINE_MAX 60              // How many measurements to store in RTC memory (Max RTC memory available is 896 bytes)
 
@@ -50,7 +50,7 @@ void setup() {
   setCpuFrequencyMhz(80);
   send_str[SEND_STR_LEN * OFFLINE_MAX - 1] = '\0';
 
-  if (VERBOSE) Serial.printf("%"PRIu64" = ""%"PRIu64" seconds since start\n", rtc_time_get(), rtc_time_get() / rtc_ratio);
+  if (VERBOSE) Serial.printf("%" PRIu64 " = ""%" PRIu64 " seconds since start\n", rtc_time_get(), rtc_time_get() / rtc_ratio);
   if (VERBOSE) {
     struct timeval tv;
     gettimeofday(&tv, NULL); 
@@ -122,7 +122,7 @@ int doWork(int wakeReason) {
     int wifiCount = 0;
 
     WiFi.begin(ssid, password);
-    if (VERBOSE) Serial.printf("Connecting to %s...\n", ssid);
+    if (VERBOSE) Serial.printf("Connecting to %s...", ssid);
     while (WiFi.status() != WL_CONNECTED && wifiCount < TIMEOUT) {
       if (VERBOSE && wifiCount % WIFI_DOT_LINE == 0) Serial.println("");
       if (VERBOSE) Serial.print(".");
