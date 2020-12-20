@@ -21,6 +21,7 @@
 #define TIMEOUT 300 //62 //11       // Stops trying to connect to WiFi after TIMEOUT * 0.05 seconds
 #define SEND_INTERVAL 5             // How many measurements before trying to send data by WiFi (Time = SLEEP_TIME * SEND_INTERVAL)
 #define OFFLINE_MAX 60              // How many measurements to store in RTC memory (Max RTC memory available is 896 bytes)
+#define SD_POWER_PIN 15             // Since 3.3v pin is occupied by the Si7021
 
 // Enums
 #define WORK_RECORD 0
@@ -41,6 +42,7 @@ RTC_DATA_ATTR float OfflineVolt[OFFLINE_MAX];
 #define SEND_STR_LEN 55
 char send_str[SEND_STR_LEN * OFFLINE_MAX];
 int httpResponse = -1;
+char test_str[SEND_STR_LEN];
 
 float getBatteryVoltage(int analogVal=0);
 void printWakeReason(int wakeReason=-1);
@@ -49,6 +51,9 @@ void setup() {
   Serial.begin(115200);
   setCpuFrequencyMhz(80);
   send_str[SEND_STR_LEN * OFFLINE_MAX - 1] = '\0';
+  test_str[SEND_STR_LEN - 1] = '\0';
+  pinMode(SD_POWER_PIN, OUTPUT);
+  digitalWrite(SD_POWER_PIN, HIGH);
 
   if (VERBOSE) Serial.printf("%" PRIu64 " = ""%" PRIu64 " seconds since start\n", rtc_time_get(), rtc_time_get() / rtc_ratio);
   if (VERBOSE) {
@@ -62,7 +67,8 @@ void setup() {
   if (VERBOSE) printWakeReason(wakeReason);
 
   int workResult = doWork(wakeReason);
-  int index = OfflineCount - 1;
+  // EPD, currently not used
+//  int index = OfflineCount - 1;
 //  if (VERBOSE) Serial.printf("Showing %d %f %f %d\n", index, OfflineTemp[index], OfflineHumid[index], OfflineWake[index]);
 //  showTemp(OfflineTemp[index], OfflineHumid[index], OfflineWake[index], getBatteryVoltage(), wakeReason);
 //  delay(500);
@@ -89,29 +95,35 @@ int doWork(int wakeReason) {
   addOffline(temp, humid, wakeReason, getBatteryVoltage());
   Serial.printf("temp=%07.2lf humid=%07.2lf wake=%d\n", temp, humid, wakeReason);
 
+  char testn[16] = ""; // /2147483647.log
+  snprintf(testn, 16, "/%d.log", getDataFileCount());
+  Serial.printf("Next data file name: %s\n", testn);
+  int testchain = 0;
+  appendFile(testn, "Dumping Offline data:\n");
+  for (int i = 0; i < OfflineCount; i++) {
+    sprintf(test_str, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d\n",
+                                           OfflineTemp[i], OfflineHumid[i], OfflineWake[i], OfflineVolt[i], i);
+    appendFile(testn, test_str);
+    Serial.println(test_str);
+  }
+
   if (VERBOSE && FirstWake) Serial.println("First wake!");
   if (FirstWake || OfflineCount % SEND_INTERVAL == 0) {
     int OfflineCountIndex = OfflineCount;
-    int tempOfflineCount = OfflineCount;
-    if (WrappedOfflineCount) {
-      tempOfflineCount = OFFLINE_MAX;
-    }
     int chain = 0;
     while (OfflineCountIndex > 0) {
       // temp=tttt.tt humid=hhhh.hh wake=r volt=v.vv index=ii\n
       OfflineCountIndex -= 1;
-      tempOfflineCount -= 1;
       chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d\n",
-                                           OfflineTemp[tempOfflineCount], OfflineHumid[tempOfflineCount], OfflineWake[tempOfflineCount], OfflineVolt[tempOfflineCount], tempOfflineCount);
+                                           OfflineTemp[OfflineCountIndex], OfflineHumid[OfflineCountIndex], OfflineWake[OfflineCountIndex], OfflineVolt[OfflineCountIndex], OfflineCountIndex);
     }
     if (WrappedOfflineCount) {
       OfflineCountIndex = OFFLINE_MAX;
       while (OfflineCountIndex > OfflineCount) {
         // temp=tttt.tt humid=hhhh.hh wake=r volt=v.vv index=ii\n
         OfflineCountIndex -= 1;
-        tempOfflineCount -= 1;
         chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d\n",
-                                             OfflineTemp[tempOfflineCount], OfflineHumid[tempOfflineCount], OfflineWake[tempOfflineCount], OfflineVolt[tempOfflineCount], tempOfflineCount);
+                                             OfflineTemp[OfflineCountIndex], OfflineHumid[OfflineCountIndex], OfflineWake[OfflineCountIndex], OfflineVolt[OfflineCountIndex], OfflineCountIndex);
       }
     }
 
@@ -133,10 +145,6 @@ int doWork(int wakeReason) {
     }
     digitalWrite(LED_BUILTIN, LOW);
     Serial.println("");
-
-    char log_str[100];
-    sprintf_P(log_str, "%d %d %4.2f\n", wifiCount, WiFi.status(), getBatteryVoltage());
-    appendFile(getSDPath(), log_str);
 
     if (wifiCount < TIMEOUT) {
       if (VERBOSE) {
