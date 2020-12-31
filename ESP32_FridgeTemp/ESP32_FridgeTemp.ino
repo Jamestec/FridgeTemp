@@ -95,18 +95,6 @@ int doWork(int wakeReason) {
   addOffline(temp, humid, wakeReason, getBatteryVoltage());
   Serial.printf("temp=%07.2lf humid=%07.2lf wake=%d\n", temp, humid, wakeReason);
 
-  char testn[16] = ""; // /2147483647.log
-  snprintf(testn, 16, "/%d.log", getDataFileCount());
-  Serial.printf("Next data file name: %s\n", testn);
-  int testchain = 0;
-  appendFile(testn, "Dumping Offline data:\n");
-  for (int i = 0; i < OfflineCount; i++) {
-    sprintf(test_str, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d\n",
-                                           OfflineTemp[i], OfflineHumid[i], OfflineWake[i], OfflineVolt[i], i);
-    appendFile(testn, test_str);
-    Serial.println(test_str);
-  }
-
   if (VERBOSE && FirstWake) Serial.println("First wake!");
   if (FirstWake || OfflineCount % SEND_INTERVAL == 0) {
     int OfflineCountIndex = OfflineCount;
