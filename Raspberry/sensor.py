@@ -3,6 +3,9 @@ from flask import Flask, request
 from subprocess import check_output
 from imports import graph_html, \
                     sensor_record, buffer_str, \
+                    sensor_packet_record, sensor_packet_fin_record, \
+                    sensor_packet_reset_record, \
+                    sd_status_record, \
                     get_data, dic_to_graph, \
                     DATA_FOLDER
 
@@ -17,6 +20,26 @@ DEBUG = True
 def sensor():
     data = request.data.decode("utf-8")
     return sensor_record(data)
+
+@app.route('/sensor_packet', methods=["POST"])
+def sensor_packet():
+    data = request.data.decode("utf-8")
+    return sensor_packet_record(data)
+
+@app.route('/sensor_packet_fin', methods=["PUT", "GET"])
+def sensor_packet_fin():
+    print("packet_fin")
+    return sensor_packet_fin_record()
+
+@app.route('/sensor_packet_reset', methods=["PUT", "GET"])
+def sensor_packet_reset():
+    print("packet_reset")
+    return sensor_packet_reset_record()
+
+@app.route('/sd_status', methods=["PUT", "GET"])
+def sd_status():
+    data = request.data.decode("utf-8")
+    return sd_status_record(data)
 
 @app.route('/', methods=["POST", "PUT", "GET"])
 @app.route('/graph', methods=["POST", "PUT", "GET"])

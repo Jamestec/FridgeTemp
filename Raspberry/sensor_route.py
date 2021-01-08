@@ -1,12 +1,13 @@
 import os
 import sys
 from imports import get_latest_log, line_to_dic, \
-                    get_datetime_utc, get_datetime_here, \
+                    get_datetime_utc, get_datetime_here, get_datetime, \
                     date_str, date_folder_str, time_str, datetime_str, \
-                    minus_time, parent, wake_reason, \
-                    BUFFER, DATA_FOLDER
+                    minus_time, get_bool, parent, wake_reason, \
+                    BUFFER, DATA_FOLDER, PACKET_TIMEOUT
 
 buffer = []
+sd_stat = True
 
 if not os.path.exists(DATA_FOLDER):
     os.mkdir(DATA_FOLDER)
@@ -24,7 +25,8 @@ def sensor_record(data):
     data = data.split("\n")
     to_print = []
     to_write = []
-    for line in data:
+    for i in range(len(data) - 1, -1, -1):
+        line = data[i]
         if "temp" in line:
             dic = line_to_dic(line)
             # Prep to print
@@ -42,7 +44,7 @@ def sensor_record(data):
                 # Make folder
                 parent_folder = parent(path)
                 if not os.path.exists(parent_folder):
-                    os.makedirs(parent_folder)
+                    os.makedirs(parent_folder, mode=0o777, exist_ok=True)
                 # Prep to write
                 content = "{} {}\n".format(time_str(log_datetime), line)
                 to_write.insert(0, (path, content))
@@ -58,6 +60,10 @@ def sensor_record(data):
     for path, content in to_write:
         with open(path, "a+") as FILE:
             FILE.write(content)
+        try:
+            os.chmod(path, 0o666) # Change permission to be read/write for everyone
+        except OSError:
+            pass
     last_log = last_log_temp
     print("")
     sys.stdout.flush()
@@ -74,3 +80,39 @@ def buffer_str():
     for line in buffer:
         string += line + "<br/>"
     return string
+
+packet = ""
+packet_count = 0
+packet_time = get_datetime([1970, 1, 1], [0, 0, 0])
+def sensor_packet_record(data):
+    global packet, packet_count, packet_time
+    if "wake" not in data and "temp" not in data:
+        string = "{} Unknown: {}\n".format(datetime_str(), data)
+        print(string)
+        add_buffer(string)
+        return ''
+    if ((get_datetime_utc() - packet_time).total_seconds() > PACKET_TIMEOUT):
+        sensor_packet_fin_record()
+    packet_count += 1
+    packet += data
+    print(f"packet {packet_count}:\n{data}")
+    return str(packet_count)
+
+def sensor_packet_fin_record():
+    global packet
+    if (len(packet) != 0):
+        sensor_record(packet)
+    sensor_packet_reset_record()
+    return ''
+
+def sensor_packet_reset_record():
+    global packet, packet_count
+    packet = ""
+    packet_count = 0
+    return ''
+
+def sd_status_record(data):
+    global sd_stat
+    print(f"sd_status: {data}")
+    sd_stat = get_bool(data)
+    return data
