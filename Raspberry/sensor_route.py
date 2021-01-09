@@ -1,7 +1,7 @@
 import os
 import sys
 from imports import get_latest_log, line_to_dic, \
-                    get_datetime_utc, get_datetime_here, get_datetime, \
+                    get_datetime_utc, get_datetime_here, \
                     date_str, date_folder_str, time_str, datetime_str, \
                     minus_time, get_bool, parent, wake_reason, \
                     BUFFER, DATA_FOLDER, PACKET_TIMEOUT
@@ -51,7 +51,7 @@ def sensor_record(data):
                 last_log_temp = log_datetime
             else:
                 to_print[0] += " <-- not logged (datetime past last log time)"
-            if dic["humid"] < 0:
+            if dic["temp"] < -40:
                 to_print[0] += " <- bad sensor record"
             log_datetime = minus_time(log_datetime)
     for line in to_print:
@@ -83,7 +83,7 @@ def buffer_str():
 
 packet = ""
 packet_count = 0
-packet_time = get_datetime([1970, 1, 1], [0, 0, 0])
+packet_time = None
 def sensor_packet_record(data):
     global packet, packet_count, packet_time
     if "wake" not in data and "temp" not in data:
@@ -91,10 +91,15 @@ def sensor_packet_record(data):
         print(string)
         add_buffer(string)
         return ''
+    # First packet
+    if packet_count == 0:
+        packet_time = get_datetime_utc()
     if ((get_datetime_utc() - packet_time).total_seconds() > PACKET_TIMEOUT):
+        print(f"Packet timed out: {(get_datetime_utc() - packet_time).total_seconds()}\n")
         sensor_packet_fin_record()
     packet_count += 1
     packet += data
+    packet_time = get_datetime_utc()
     print(f"packet {packet_count}:\n{data}")
     return str(packet_count)
 
@@ -106,9 +111,10 @@ def sensor_packet_fin_record():
     return ''
 
 def sensor_packet_reset_record():
-    global packet, packet_count
+    global packet, packet_count, packet_time
     packet = ""
     packet_count = 0
+    packet_time = None
     return ''
 
 def sd_status_record(data):
