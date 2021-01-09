@@ -13,7 +13,7 @@ void doDeepSleep(int sleepSeconds) {
 //  if (VERBOSE) Serial.printf("Setting ESP32 to wakeup on LOW on GPIO 33\n");
 //  esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, LOW);
   if (VERBOSE) Serial.println("Starting deep sleep");
-  Serial.flush();
+  if (VERBOSE) Serial.flush();
   //Go to sleep now
   esp_deep_sleep_start();
 }

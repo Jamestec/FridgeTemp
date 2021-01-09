@@ -84,6 +84,8 @@ void setup() {
     Serial.println("HTTP fail, check server is responding");
   }
 
+  if (VERBOSE && !useSD) Serial.println("SD is not in use");
+
   FirstWake = false;
   doDeepSleep(SLEEP_TIME);
 }
@@ -97,15 +99,18 @@ int doWork(int wakeReason) {
   float humid = sensor.getRH();
   float temp = sensor.getTemp();
   if (VERBOSE && FirstWake) Serial.println("First wake!");
-  Serial.printf("temp=%07.2lf humid=%07.2lf wake=%d\n", temp, humid, wakeReason);
+  if (VERBOSE) Serial.printf("temp=%07.2lf humid=%07.2lf wake=%d\n", temp, humid, wakeReason);
   if (!addOffline(temp, humid, wakeReason, getBatteryVoltage())) {
     if (VERBOSE) Serial.println("addOffline failed, not using SD");
     switchOffSD();
     addOffline(temp, humid, wakeReason, getBatteryVoltage());
   }
 
+  if (VERBOSE) Serial.printf("OfflineCount: %d\n", OfflineCount);
+
   if (FirstWake || OfflineCount % SEND_INTERVAL == 0) {
     if (WiFiConnect()) {
+      bool success = false;
       if (useSD) {
 
         int sendCount = 0;
@@ -121,7 +126,10 @@ int doWork(int wakeReason) {
           if (VERBOSE) Serial.printf("Sending failed: %d, retrying %d...\n", httpResponse, sendCount);
         }
         if (VERBOSE && sendCount >= WIFI_SYNC_TRIES) {
-          Serial.println("WIFI_SYNC_TRIES exceeded, couldn't send data");
+          if (VERBOSE) Serial.println("WIFI_SYNC_TRIES exceeded, couldn't send data");
+        }
+        if (httpResponse == 200 && sendCount < WIFI_SYNC_TRIES) {
+          success = true;
         }
 
       } else {
@@ -143,16 +151,18 @@ int doWork(int wakeReason) {
                                                OfflineTemp[OfflineCountIndex], OfflineHumid[OfflineCountIndex], OfflineWake[OfflineCountIndex], OfflineVolt[OfflineCountIndex], OfflineCountIndex);
           OfflineCountIndex += 1;
         }
+        if (WiFiSend(ADDR, send_str) == 200) {
+          success = true;
+        }
 
-        WiFiSend(ADDR, send_str);
       }
       WiFiSendSDStatus();
       WiFiEnd();
 
-      if (httpResponse != 200) {
-        return WORK_HTTPFAIL;
+      if (success) {
+        return WORK_SUCCESS;
       }
-      return WORK_SUCCESS;
+      return WORK_HTTPFAIL;
 
     } else {
       if (VERBOSE) Serial.printf("\nCould not connect to %s in %.2f seconds.\n", ssid, TIMEOUT * WIFI_DOT_INTERVAL_SEC);

@@ -22,7 +22,7 @@ bool WiFiConnect() {
     delay(WIFI_DOT_INTERVAL / 2);
   }
   digitalWrite(LED_BUILTIN, LOW);
-  Serial.println("");
+  if (VERBOSE) Serial.println("");
 
   if (wifiCount < TIMEOUT) {
     if (VERBOSE) {
@@ -44,10 +44,8 @@ int WiFiSend(char *address, char *toSend) {
   http.begin(address);
   http.addHeader("Content-Type", "text/plain");
   httpResponse = http.POST(toSend);
-  //String reply = http.getString(); // Ideally we don't use String class, but idk another method to get reply
   http.end();
   if (VERBOSE) Serial.printf("HTTP response: %d\n", httpResponse);
-  //if (VERBOSE) Serial.printf("HTTP reply: %s\n", reply);
   return httpResponse;
 }
 
@@ -67,7 +65,7 @@ int WiFiSendPacket(char *address, char *toSend) {
   if (reply.toInt() != WiFiCount) {
     Serial.printf("WiFiCount mismatch: %d, %s\n", WiFiCount, reply);
     sprintf(toSend, "WiFiCount mismatch: %d, %s\n", WiFiCount, reply);
-    appendFile(getLogPath(), toSend);
+    if (httpResponse == 200) appendFile(getLogPath(), toSend); // Only actually log if server replied weird, don't log internal error etc.
     return -2; // Meaning data should be resent from the start
   }
   return httpResponse;
@@ -105,19 +103,20 @@ boolean WiFiSendPacketReset() {
 void WiFiSendSDStatus() {
   if (!WiFiBegan) WiFiConnect();
   HTTPClient http;
+  int response;
   http.begin(ADDR_SD_STATUS);
   http.addHeader("Content-Type", "text/plain");
   // C:\Users\User\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.4\libraries\WiFi\src\WiFiClient.cpp
   // line 107 add fillBuffer();
   // else core panic
   if (useSD) {
-    httpResponse = http.PUT("true");
+    response = http.PUT("true");
   } else {
-    httpResponse = http.PUT("false");
+    response = http.PUT("false");
   }
   String temp = http.getString();
-  if (VERBOSE && httpResponse == 200) Serial.printf("SD http reply: %s\n", temp);
-  if (VERBOSE && httpResponse != 200) Serial.printf("Failed to send SD status, response: %d\n", httpResponse);
+  if (VERBOSE && response == 200) Serial.printf("SD http reply: %s\n", temp);
+  if (VERBOSE && response != 200) Serial.printf("Failed to send SD status, response: %d\n", httpResponse);
   http.end();
 }
 
