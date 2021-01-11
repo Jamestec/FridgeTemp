@@ -33,10 +33,22 @@ int sendData(char *dataLoc, char *buff) {
 
       int response = 0;
       if (!WiFiSendPacketReset()) return -2;
+      int count = 0;
+      int len = SEND_STR_LEN * OFFLINE_MAX - 1;
       while (file.available()) {
-        file.read((uint8_t *)buff, SEND_STR_LEN * OFFLINE_MAX); // TODO check read was good
+        if (count < len) {
+          buff[count] = file.read();
+          count += 1;
+        } else {
+          buff[len] = '\0';
+          response = WiFiSendPacket(ADDR_PACKET, buff);
+          count = 0;
+          if (response != 200) break;
+        }
+      }
+      if (count > 0) {
+        buff[count] = '\0';
         response = WiFiSendPacket(ADDR_PACKET, buff);
-        if (response != 200) break;
       }
       file.close();
       WiFiSendPacketFin();
