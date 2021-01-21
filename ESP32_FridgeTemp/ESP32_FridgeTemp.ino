@@ -13,12 +13,14 @@
 #define ADDR_PACKET_FIN "http://192.168.1.122:8090/sensor_packet_fin"
 #define ADDR_PACKET_RESET "http://192.168.1.122:8090/sensor_packet_reset"
 #define ADDR_SD_STATUS "http://192.168.1.122:8090/sd_status"
+#define ADDR_TIME_REQ "http://192.168.1.122:8090/epoch"
 #else
 #define ADDR "http://10.24.20.121:8090/sensor"
 #define ADDR_PACKET "http://10.24.20.121:8090/sensor_packet"
 #define ADDR_PACKET_FIN "http://10.24.20.121:8090/sensor_packet_fin"
 #define ADDR_PACKET_RESET "http://10.24.20.121:8090/sensor_packet_reset"
 #define ADDR_SD_STATUS "http://10.24.20.121:8090/sd_status"
+#define ADDR_TIME_REQ "http://10.24.20.121:8090/epoch"
 #endif
 
 #define VERBOSE 1
@@ -31,6 +33,7 @@
 #define SEND_INTERVAL 5             // How many measurements before trying to send data by WiFi (Time = SLEEP_TIME * SEND_INTERVAL)
 #define OFFLINE_MAX 60              // How many measurements to store in RTC memory (Max RTC memory available is 896 bytes)
 #define SD_POWER_PIN 15             // Since 3.3v pin is occupied by the Si7021
+#define SENSOR_ID 1                 // Unique ID
 
 // Enums
 #define WORK_RECORD 0
@@ -48,7 +51,7 @@ RTC_DATA_ATTR float OfflineHumid[OFFLINE_MAX];
 RTC_DATA_ATTR int8_t OfflineWake[OFFLINE_MAX];
 RTC_DATA_ATTR float OfflineVolt[OFFLINE_MAX];
 
-#define SEND_STR_LEN 55
+#define SEND_STR_LEN 70
 char send_str[SEND_STR_LEN * OFFLINE_MAX];
 int httpResponse = -1;
 
@@ -73,6 +76,7 @@ void setup() {
       removeFile(getDataPath());
     } else {
       WrappedOfflineCount = false;
+      useSD = true; // Try use the SD again, only a problem if SD access works 50/50 of the time
     }
   }
   if (workResult == WORK_SDFAIL) {
@@ -99,17 +103,33 @@ int doWork(int wakeReason) {
   float humid = sensor.getRH();
   float temp = sensor.getTemp();
   if (VERBOSE && FirstWake) Serial.println("First wake!");
-  if (VERBOSE) Serial.printf("temp=%07.2lf humid=%07.2lf wake=%d\n", temp, humid, wakeReason);
-  if (!addOffline(temp, humid, wakeReason, getBatteryVoltage())) {
-    if (VERBOSE) Serial.println("addOffline failed, not using SD");
-    switchOffSD();
-    addOffline(temp, humid, wakeReason, getBatteryVoltage());
+
+  struct timeval tv;
+  if (gettimeofday(&tv, NULL) == -1) {
+    Serial.println("Unable to gettimeofday()");
   }
 
-  if (VERBOSE) Serial.printf("OfflineCount: %d\n", OfflineCount);
+  if (VERBOSE) Serial.printf("temp=%07.2lf humid=%07.2lf wake=%d OfflineCount=%d time=%d\n", temp, humid, wakeReason, OfflineCount, tv.tv_sec);
+  if (!addOffline(temp, humid, wakeReason, getBatteryVoltage(), tv.tv_sec)) {
+    if (VERBOSE) Serial.println("addOffline failed, not using SD");
+    switchOffSD();
+    addOffline(temp, humid, wakeReason, getBatteryVoltage(), tv.tv_sec);
+  }
 
   if (FirstWake || OfflineCount % SEND_INTERVAL == 0) {
     if (WiFiConnect()) {
+
+      // Update time
+      int epoch = WiFiGetTime();
+      if (epoch != -1) {
+        tv.tv_sec = epoch;
+        if (settimeofday(&tv, NULL) == -1) {
+          Serial.println("Unable to settimeofday()");
+        } else {
+          Serial.printf("Set new time to: %d\n", tv.tv_sec);
+        }
+      }
+
       bool success = false;
       if (useSD) {
 
@@ -138,17 +158,17 @@ int doWork(int wakeReason) {
         int chain = 0;
         if (WrappedOfflineCount) {
           while (OfflineCountIndex < OFFLINE_MAX) {
-            // temp=tttt.tt humid=hhhh.hh wake=r volt=v.vv index=ii\n
-            chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d\n",
-                                                 OfflineTemp[OfflineCountIndex], OfflineHumid[OfflineCountIndex], OfflineWake[OfflineCountIndex], OfflineVolt[OfflineCountIndex], OfflineCountIndex);
+            // temp=tttt.tt humid=hhhh.hh wake=r volt=v.vv index=ii id=dd time=eeeeeeeeee\n
+            chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d id=%d time=%d\n",
+                                         OfflineTemp[OfflineCountIndex], OfflineHumid[OfflineCountIndex], OfflineWake[OfflineCountIndex], OfflineVolt[OfflineCountIndex], OfflineCountIndex, SENSOR_ID, tv.tv_sec);
             OfflineCountIndex += 1;
           }
         }
         OfflineCountIndex = 0;
         while (OfflineCountIndex < OfflineCount) {
-          // temp=tttt.tt humid=hhhh.hh wake=r volt=v.vv index=ii\n
-          chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d\n",
-                                               OfflineTemp[OfflineCountIndex], OfflineHumid[OfflineCountIndex], OfflineWake[OfflineCountIndex], OfflineVolt[OfflineCountIndex], OfflineCountIndex);
+          // temp=tttt.tt humid=hhhh.hh wake=r volt=v.vv index=ii id=dd time=eeeeeeeeee\n
+          chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d id=%d time=%d\n",
+                                       OfflineTemp[OfflineCountIndex], OfflineHumid[OfflineCountIndex], OfflineWake[OfflineCountIndex], OfflineVolt[OfflineCountIndex], OfflineCountIndex, SENSOR_ID, tv.tv_sec);
           OfflineCountIndex += 1;
         }
         if (WiFiSend(ADDR, send_str) == 200) {
@@ -175,9 +195,9 @@ int doWork(int wakeReason) {
 void loop() {}
 
 // If this returns false, something wrong with SD
-boolean addOffline(float temp, float humid, int wakeReason, float volt) {
+boolean addOffline(float temp, float humid, int wakeReason, float volt, int epoch) {
   if (useSD) {
-    sprintf_P(send_str, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d\n", temp, humid, wakeReason, volt, OfflineCount);
+    sprintf_P(send_str, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d id=%d time=%d\n", temp, humid, wakeReason, volt, OfflineCount, SENSOR_ID, epoch);
     if (!appendFile(getDataPath(), send_str)) {
       return false;
     }

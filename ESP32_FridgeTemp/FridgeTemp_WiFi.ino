@@ -53,6 +53,7 @@ int WiFiCount = 0;
 // May change toSend contents
 int WiFiSendPacket(char *address, char *toSend) {
   if (!WiFiBegan) WiFiConnect();
+  if (VERBOSE) Serial.printf("Packet %d: %s\n", WiFiCount + 1, toSend);
   HTTPClient http;
   http.begin(address);
   http.addHeader("Content-Type", "text/plain");
@@ -118,6 +119,31 @@ void WiFiSendSDStatus() {
   if (VERBOSE && response == 200) Serial.printf("SD http reply: %s\n", temp);
   if (VERBOSE && response != 200) Serial.printf("Failed to send SD status, response: %d\n", httpResponse);
   http.end();
+}
+
+// returns Epoch/UNIX time or -1 if nope
+int WiFiGetTime() {
+  if (!WiFiBegan) WiFiConnect();
+  HTTPClient http;
+  http.begin(ADDR_TIME_REQ);
+  int response = http.GET();
+  int parsed = 0;
+  if (response == 200) {
+    parsed = http.getString().toInt();
+    if (parsed > 1000000000) { // 2001
+      http.end();
+      return parsed;
+    }
+  }
+  if (VERBOSE) {
+    if (response != 200) {
+      Serial.printf("Request for time failed, http response: %d\n", response);
+    } else {
+      Serial.printf("Request for time failed, parsed: %ul\n", parsed);
+    }
+  }
+  http.end();
+  return -1;
 }
 
 // Should be called when we're 100% finished with WiFi, before sleeping
