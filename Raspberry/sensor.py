@@ -1,4 +1,5 @@
 import os
+import time
 from flask import Flask, request
 from subprocess import check_output
 from imports import graph_html, \
@@ -40,6 +41,10 @@ def sensor_packet_reset():
 def sd_status():
     data = request.data.decode("utf-8")
     return sd_status_record(data)
+
+@app.route('/epoch', methods=["GET"])
+def epoch():
+    return str(time.time())
 
 @app.route('/', methods=["POST", "PUT", "GET"])
 @app.route('/graph', methods=["POST", "PUT", "GET"])
