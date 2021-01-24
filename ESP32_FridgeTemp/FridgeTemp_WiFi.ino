@@ -43,10 +43,10 @@ int WiFiSend(char *address, char *toSend) {
   HTTPClient http;
   http.begin(address);
   http.addHeader("Content-Type", "text/plain");
-  httpResponse = http.POST(toSend);
+  int response = http.POST(toSend);
   http.end();
-  if (VERBOSE) Serial.printf("HTTP response: %d\n", httpResponse);
-  return httpResponse;
+  if (VERBOSE) Serial.printf("HTTP response: %d\n", response);
+  return response;
 }
 
 int WiFiCount = 0;
@@ -57,19 +57,19 @@ int WiFiSendPacket(char *address, char *toSend) {
   HTTPClient http;
   http.begin(address);
   http.addHeader("Content-Type", "text/plain");
-  httpResponse = http.POST(toSend);
+  int response = http.POST(toSend);
   String reply = http.getString(); // Ideally we don't use String class, but idk another method to get reply
   http.end();
-  if (VERBOSE) Serial.printf("HTTP response: %d\n", httpResponse);
+  if (VERBOSE) Serial.printf("HTTP response: %d\n", response);
   if (VERBOSE) Serial.printf("HTTP reply: %s\n", reply);
   WiFiCount += 1;
   if (reply.toInt() != WiFiCount) {
     Serial.printf("WiFiCount mismatch: %d, %s\n", WiFiCount, reply);
     sprintf(toSend, "WiFiCount mismatch: %d, %s\n", WiFiCount, reply);
-    if (httpResponse == 200) appendFile(getLogPath(), toSend); // Only actually log if server replied weird, don't log internal error etc.
+    if (response == 200) appendFile(getLogPath(), toSend); // Only actually log if server replied weird, don't log internal error etc.
     return -2; // Meaning data should be resent from the start
   }
-  return httpResponse;
+  return response;
 }
 
 // Call this after you have finished using WiFiSendPacket(...)
@@ -117,7 +117,7 @@ void WiFiSendSDStatus() {
   }
   String temp = http.getString();
   if (VERBOSE && response == 200) Serial.printf("SD http reply: %s\n", temp);
-  if (VERBOSE && response != 200) Serial.printf("Failed to send SD status, response: %d\n", httpResponse);
+  if (VERBOSE && response != 200) Serial.printf("Failed to send SD status, response: %d\n", response);
   http.end();
 }
 
