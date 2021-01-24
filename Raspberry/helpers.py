@@ -15,6 +15,11 @@ def get_datetime_here(dt=None):
         return datetime.now()
     return datetime.fromtimestamp(dt.timestamp())
 
+def get_datetime_from_timestamp(timestamp=None):
+    if timestamp == None:
+        timestamp = 0
+    return datetime.fromtimestamp(int(timestamp))
+
 def date_str(date=None):
     '''E.g. 2019-10-29'''
     if date is None:
