@@ -10,7 +10,7 @@ window.onload = function () {
 	}*/
 
 const data = {{data}};
-let elementChanged = {{elementChanged}};
+elementChanged = {{elementChanged}};
 let visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
 let lines = [];
 // Red, Blue, Orange | Green, Purple, Pink
@@ -168,6 +168,8 @@ if (low_volt.length > 0) {
 	let loop = document.getElementsByClassName("voltLowWarn");
 	for (item of loop) {
 		item.style.visibility = "visible";
+		item.innerHTML = "<br><div style=\"font-size:1.5em;background-color:yellow;margin-right:1em\">Please charge the battery of "
+				+ low_volt + "</div></div>";
 	}
 }
 
