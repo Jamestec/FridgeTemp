@@ -6,15 +6,14 @@ from imports import get_datetime_utc, get_datetime_here, date_str, time_str, \
 
 def graph_html(request_values, title="untitled", html="sensor_graph_jquery.html"):
     from_dt, to_dt, vis, elementChanged = get_graph_defaults(request_values)
-    times, temp, humid, volt = dic_to_graph(get_data(
-                                                    get_datetime_utc(from_dt),
-                                                    get_datetime_utc(to_dt)))
+    data = dic_to_graph(get_data(   get_datetime_utc(from_dt),
+                                    get_datetime_utc(to_dt)))
     fromdate = date_str(from_dt)
     fromtime = time_str(from_dt)[:-3]
     todate = date_str(to_dt)
     totime = time_str(to_dt)[:-3]
     return render_template(html, title=title,
-                           times=times, temp=temp, humid=humid, volt=volt,
+                           data=data,
                            fromdate=fromdate, fromtime=fromtime, todate=todate, totime=totime,
                            temp_visible=vis[0], humid_visible=vis[1], volt_visible=vis[2],
                            elementChanged=elementChanged, TIME_BETWEEN_READS=TIME_BETWEEN_READS)

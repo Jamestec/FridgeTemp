@@ -12,7 +12,7 @@ sd_stat = True
 if not os.path.exists(DATA_FOLDER):
     os.mkdir(DATA_FOLDER)
 
-last_log = get_latest_log()["datetime"]
+last_log = {}
 
 def sensor_record(data):
     if "wake" not in data and "humid" not in data:
@@ -22,18 +22,23 @@ def sensor_record(data):
         return ''
 
     global last_log
-    last_log_new = last_log
+    last_log_new = last_log.copy() # Herp derp
     log_datetime = get_datetime_utc()
     data = data.split("\n")
     to_print = []
     to_write = []
     not_logged = False
+    last_time = None # This is for "fake" LolinD32 that can't keep track of time properly
     for i in range(len(data) - 1, -1, -1):
         line = data[i]
         if "temp" in line:
             dic = line_to_dic(line)
-            if "time" in dic and dic["time"] > get_datetime_utc(get_datetime_from_timestamp(1000000000)):
+            sensor_id = "00"
+            if "id" in dic:
+                sensor_id = dic["id"]
+            if "time" in dic and dic["time"] > get_datetime_utc(get_datetime_from_timestamp(1000000000)) and not dic["time"] == last_time:
                 log_datetime = dic["time"]
+                last_time = log_datetime
             # Prep to print
             print_str = datetime_str(get_datetime_here(log_datetime))
             for key in dic:
@@ -42,13 +47,13 @@ def sensor_record(data):
             for unknown in dic["unknown"]:
                 print_str += " {}".format(unknown)
             to_print.insert(0, print_str)
-            if log_datetime >= last_log:
+            if sensor_id not in last_log or log_datetime >= last_log[sensor_id]:
                 # Prep to write
                 path = os.path.join(DATA_FOLDER, date_folder_str(log_datetime) + ".txt")
                 content = "{} {}\n".format(time_str(log_datetime), line)
                 to_write.insert(0, (path, content))
-                if log_datetime > last_log_new:
-                    last_log_new = log_datetime
+                if sensor_id not in last_log_new or log_datetime > last_log_new[sensor_id]:
+                    last_log_new[sensor_id] = log_datetime
             else:
                 to_print[0] += " <-- not logged (datetime past last log time)"
                 not_logged = True
@@ -70,18 +75,20 @@ def sensor_record(data):
             os.chmod(path, 0o666) # Change permission to be read/write for everyone
         except OSError:
             pass
+    last_log.clear() # This actually frees memory (not required but for my memory)
     last_log = last_log_new
     print("")
     sys.stdout.flush()
     if not_logged: # Dump for inspection later
-        path = os.path.join(DATA_FOLDER, date_str(last_log) + "_" + time_str(last_log) + ".txt")
+        dt = get_datetime_utc()
+        path = os.path.join(DATA_FOLDER, date_str(dt) + "_" + time_str(dt) + ".txt")
         # Make folder
         parent_folder = parent(path)
         if not os.path.exists(parent_folder):
             os.makedirs(parent_folder, mode=0o777, exist_ok=True)
         # Write
         with open(path, "a+") as FILE:
-            FILE.write(content)
+            FILE.write(to_print)
         try:
             os.chmod(path, 0o666)
         except OSError:

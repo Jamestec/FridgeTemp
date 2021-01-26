@@ -1,128 +1,175 @@
 window.onload = function () {
 
-const limit = {{times | length}};
-const times = {{times | safe}};
-const temp = {{temp}};
-const humid = {{humid}};
-const volt = {{volt}};
+/* data = {"sensorID":
+		{"temp": [data],
+		 "datetime": [time for the index],
+		 "limit": 5,
+		 ...
+		}, // temp, humid, volt, datetime, limit (integer)
+	   "another sensor":...
+	}*/
 
-const temp_color = "#C0504E";
-const humid_color = "#4F81BC";
-const volt_color = "#f0a502";
+const data = {{data}};
+let elementChanged = {{elementChanged}};
+let visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
+let lines = [];
+// Red, Blue, Orange | Green, Purple, Pink
+const colours = ["#C0504E", "#4F81BC", "#f0a502", "#0ec90e", "#9b15bd", "#f205e6"]
+let colours_i = 0;
+let colours_len = 6;
+let volt_min = 3.75;
+const volt_max = 4.25;
+let stats = "";
+let low_volt = [];
 
-// Determine minimum (and max) voltage for axis label
-let volt_min = Math.min(...volt) - 0.01;
-if (volt_min > 3.75 || volt_min == 0 - 0.01) {
-	volt_min = 3.75;
-}
-const volt_max = 4.25
+for (id in data) {
+	let limit = data[id]["limit"];
+	let times = data[id]["datetime"];
+	let temp = data[id]["temp"];
+	let humid = data[id]["humid"];
+	let volt = data[id]["volt"];
 
-elementChanged = {{elementChanged}};
-visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
-
-// Setup graph line data stuff
-let data = [];
-let tempData = {
-	type: "line",
-	name: "Temperature",
-	id: "temp",
-	color: temp_color,
-	xValueType: "dateTime",
-	axisYType: "primary",
-        axisYIndex: 0,
-	showInLegend: true,
-	visible: visible["temp"],
-	xValueFormatString: "DD/MM/YY HH:mm:ss",
-	yValueFormatString: "##.#0°C",
-};
-let humidData = {
-	type: "line",
-	name: "Humidity",
-	id: "humid",
-	color: humid_color,
-	xValueType: "dateTime",
-	axisYType: "secondary",
-        axisYIndex: 0,
-	showInLegend: true,
-	visible: visible["humid"],
-	xValueFormatString: "DD/MM/YY HH:mm:ss",
-	yValueFormatString: "##.#0 '%'",
-};
-let voltData = {
-	type: "line",
-	name: "Battery Voltage",
-	id: "volt",
-	color: volt_color,
-	xValueType: "dateTime",
-	axisYType: "secondary",
-        axisYIndex: 1,
-	showInLegend: true,
-	visible: visible["volt"],
-	xValueFormatString: "DD/MM/YY HH:mm:ss",
-	yValueFormatString: "#.## v",
-};
-tempData.dataPoints = [];
-humidData.dataPoints = [];
-voltData.dataPoints = [];
-// Prep for parsing server data to line data stuff
-let prevDate = new Date(document.getElementById("fromDate").value + " "+
-			document.getElementById("fromTime").value);
-var TIME_BETWEEN_READS = {{TIME_BETWEEN_READS}} * 1000;
-// Determine if {{TIME_BETWEEN_READS}} is appropriate for most of data
-// This may be because ESP32 was changed, but not Raspberry Pi
-if (limit > 1) {
-	let sample = Math.abs(new Date(times[1]) - new Date(times[0]));
-	sample += Math.abs(new Date(times[limit / 2]) - new Date(times[(limit / 2) - 1]));
-	sample += Math.abs(new Date(times[limit - 1]) - new Date(times[limit - 2]));
-	sample /= 3;
-	if (sample > TIME_BETWEEN_READS) {
-		TIME_BETWEEN_READS = sample;
+	// Determine minimum (and max) voltage for axis label
+	let volt_min_temp = Math.min(...volt) - 0.01;
+	if (volt_min_temp > 3.75 || volt_min_temp == 0 - 0.01) {
+		volt_min_temp = 3.75;
 	}
-}
-min_temp = 500;
-max_temp = -500;
-const THRESHOLD = TIME_BETWEEN_READS / 3;
-let sections = {};
-// Loop to fill data points (line data stuff) + other
-for (let i = 0; i < limit; i += 1) {
-	let date = new Date(times[i]);
-	if (date - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
-		// Missing some reads, fill it with fluf so no line
-		prevDate = new Date(prevDate.getTime() + TIME_BETWEEN_READS);
-		addDataPoint(prevDate, tempData, humidData, voltData,
-				undefined, undefined, undefined);
+	if (volt_min_temp < volt_min) { volt_min = volt_min_temp; }
+
+	// Setup graph line data stuff
+	let tempData = {
+		type: "line",
+		name: id + " Temperature",
+		id: "temp",
+		color: colours[colours_i],
+		xValueType: "dateTime",
+		axisYType: "primary",
+		axisYIndex: 0,
+		showInLegend: true,
+		visible: visible["temp"],
+		xValueFormatString: "DD/MM/YY HH:mm:ss",
+		yValueFormatString: "##.#0°C",
+	};
+	colours_i += 1;
+	if (colours_i >= colours_len) { colours_i = 0; }
+	let humidData = {
+		type: "line",
+		name: id + " Humidity",
+		id: "humid",
+		color: colours[colours_i],
+		xValueType: "dateTime",
+		axisYType: "secondary",
+		axisYIndex: 0,
+		showInLegend: true,
+		visible: visible["humid"],
+		xValueFormatString: "DD/MM/YY HH:mm:ss",
+		yValueFormatString: "##.#0 '%'",
+	};
+	colours_i += 1;
+	if (colours_i >= colours_len) { colours_i = 0; }
+	let voltData = {
+		type: "line",
+		name: id + " Battery Voltage",
+		id: "volt",
+		color: colours[colours_i],
+		xValueType: "dateTime",
+		axisYType: "secondary",
+		axisYIndex: 1,
+		showInLegend: true,
+		visible: visible["volt"],
+		xValueFormatString: "DD/MM/YY HH:mm:ss",
+		yValueFormatString: "#.## v",
+	};
+	colours_i += 1;
+	if (colours_i >= colours_len) { colours_i = 0; }
+
+	tempData.dataPoints = [];
+	humidData.dataPoints = [];
+	voltData.dataPoints = [];
+	// Prep for parsing server data to line data stuff
+	let prevDate = new Date(document.getElementById("fromDate").value + " "+
+				document.getElementById("fromTime").value);
+	var TIME_BETWEEN_READS = {{TIME_BETWEEN_READS}} * 1000;
+	// Determine if {{TIME_BETWEEN_READS}} is appropriate for most of data
+	// This may be because ESP32 was changed, but not Raspberry Pi
+	if (limit > 1) {
+		let sample = Math.abs(new Date(times[1]) - new Date(times[0]));
+		sample += Math.abs(new Date(times[limit / 2]) - new Date(times[(limit / 2) - 1]));
+		sample += Math.abs(new Date(times[limit - 1]) - new Date(times[limit - 2]));
+		sample /= 3;
+		if (sample > TIME_BETWEEN_READS) {
+			TIME_BETWEEN_READS = sample;
+		}
 	}
-	if (isGoodTempRead(temp[i])) {
-		// Determine min and max
-		if (temp[i] > max_temp) { max_temp = temp[i]; }
-		if (temp[i] < min_temp) { min_temp = temp[i]; }
-		// Do min/max for sections
-		doSections(sections, date, temp[i], TIME_BETWEEN_READS);
+	min_temp = 500;
+	max_temp = -500;
+	const THRESHOLD = TIME_BETWEEN_READS / 3;
+	let sections = {};
+	// Loop to fill data points (line data stuff) + other
+	for (let i = 0; i < limit; i += 1) {
+		let date = new Date(times[i]);
+		if (date - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
+			// Missing some reads, fill it with fluf so no line
+			prevDate = new Date(prevDate.getTime() + TIME_BETWEEN_READS);
+			addDataPoint(prevDate, tempData, humidData, voltData,
+					undefined, undefined, undefined);
+		}
+		if (isGoodTempRead(temp[i])) {
+			// Determine min and max
+			if (temp[i] > max_temp) { max_temp = temp[i]; }
+			if (temp[i] < min_temp) { min_temp = temp[i]; }
+			// Do min/max for sections
+			doSections(sections, date, temp[i], TIME_BETWEEN_READS);
+		}
+		// Add data point
+		addDataPoint(date, tempData, humidData, voltData,
+				temp[i], humid[i], volt[i]);
+		prevDate = date;
 	}
-	// Add data point
-	addDataPoint(date, tempData, humidData, voltData,
-			temp[i], humid[i], volt[i]);
-	prevDate = date;
+	// There were no good sensor reads :(, no min/max
+	if (min_temp == 500) min_temp = undefined;
+	if (max_temp == -500) max_temp = undefined;
+	// Fluff the last sensor to now so there's space on graph
+	let endDate = new Date(document.getElementById("toDate").value + " "+
+				document.getElementById("toTime").value);
+	if (endDate - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
+		addDataPoint(endDate, tempData, humidData, voltData,
+					undefined, undefined, undefined);
+	}
+
+	stats += "<b>Sensor " + id + "<br>Total date range stats:</b><br>Temperature min/max: " + min_temp + "°C/" + max_temp + "°C" + "<br><br>"
+	+ "<b>Sections:</b><br>" + doSectionString(sections) + "<br>";
+
+	// Battery low voltage warning
+	if (volt_min <= 3.77) {
+		let count = 0;
+		let good = volt.length * 0.8;
+		for (item of volt) {
+			if (item <= 3.77) {
+				count += 1;
+				if (count > good) {
+					low_volt.push(id);
+					break;
+				}
+			}
+		}
+	}
+
+	// Add line data stuff to graph
+	lines.push(tempData);
+	lines.push(humidData);
+	lines.push(voltData);
 }
-// There were no good sensor reads :(, no min/max
-if (min_temp == 500) min_temp = undefined;
-if (max_temp == -500) max_temp = undefined;
-// Fluff the last sensor to now so there's space on graph
-let endDate = new Date(document.getElementById("toDate").value + " "+
-			document.getElementById("toTime").value);
-if (endDate - prevDate > TIME_BETWEEN_READS + THRESHOLD) {
-	addDataPoint(endDate, tempData, humidData, voltData,
-				undefined, undefined, undefined);
-}
-// Add line data stuff to graph
-data.push(tempData);
-data.push(humidData);
-data.push(voltData);
 
 // Graph statistics
-let stats = "<b>Total date range stats:</b><br>Temperature min/max: " + min_temp + "°C/" + max_temp + "°C" + "<br><br>"
-	+ "<b>Sections:</b><br>" + doSectionString(sections);
 document.getElementById("stats").innerHTML = stats;
+
+if (low_volt.length > 0) {
+	let loop = document.getElementsByClassName("voltLowWarn");
+	for (item of loop) {
+		item.style.visibility = "visible";
+	}
+}
 
 // Set graph options/assign data
 let options = {
@@ -135,9 +182,9 @@ let options = {
 		fontWeight: "no"
 	},
 	axisY: {
-		lineColor: temp_color,
-		labelFontColor: temp_color,
-		tickColor: temp_color,
+		lineColor: colours[0],
+		labelFontColor: colours[0],
+		tickColor: colours[0],
 		includeZero: false,
 		stripLines:[
 			{value:2, color:"red", thickness:3},
@@ -146,14 +193,14 @@ let options = {
 	},
 	axisY2: [
 	{
-		lineColor: humid_color,
-		labelFontColor: humid_color,
-		tickColor: humid_color,
+		lineColor: colours[1],
+		labelFontColor: colours[1],
+		tickColor: colours[1],
 		includeZero: false
 	}, {
-		lineColor: volt_color,
-		labelFontColor: volt_color,
-		tickColor: volt_color,
+		lineColor: colours[2],
+		labelFontColor: colours[2],
+		tickColor: colours[2],
 		includeZero: false
 	}],
 	toolTip: {
@@ -164,7 +211,7 @@ let options = {
 		itemclick: toggleDataSeries,
 		verticalAlign: "top"
 	},
-	data: data
+	data: lines
 };
 
 if (visible.volt) {
@@ -185,24 +232,6 @@ $("#resizable").resizable({
 		remURL();
 	}
 });
-
-// Battery low voltage warning
-if (volt_min <= 3.77) {
-	let count = 0;
-	let good = volt.length * 0.8;
-	for (item of volt) {
-		if (item <= 3.77) {
-			count += 1;
-			if (count > good) {
-				let loop = document.getElementsByClassName("voltLowWarn");
-				for (item of loop) {
-					item.style.visibility = "visible";
-				}
-				break;
-			}
-		}
-	}
-}
 
 document.getElementById("loadingGraph").remove();
 
