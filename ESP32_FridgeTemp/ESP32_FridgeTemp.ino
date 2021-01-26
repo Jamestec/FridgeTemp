@@ -1,11 +1,20 @@
-#include "WiFi.h"
-#include <HTTPClient.h>
-#include "SparkFun_Si7021_Breakout_Library.h"
-#include <Wire.h>
-#include "soc/rtc.h" // rtc_time_get
 
 #define TESTING 1
+#define VERBOSE 1
+#define SI7021 1                    // 1 or else we're using the SparkFun TMP117
+#define SENSOR_ID 2                 // Unique ID
+#define STORE_TIME 0                // For ESPs that can't keep track of time
 #include "login.h"
+
+#include "WiFi.h"
+#include <HTTPClient.h>
+#if SI7021 == 1
+#include "SparkFun_Si7021_Breakout_Library.h"
+#else
+#include <SparkFun_TMP117.h>
+#endif
+#include <Wire.h>
+#include "soc/rtc.h" // rtc_time_get
 
 #if TESTING
 #define ADDR "http://192.168.1.122:8090/sensor"
@@ -23,7 +32,6 @@
 #define ADDR_TIME_REQ "http://10.24.20.121:8090/epoch"
 #endif
 
-#define VERBOSE 1
 #define SLEEP_TIME 180              // Seconds ESP32 will go to sleep
 #define WIFI_DOT_INTERVAL 50        // Milliseconds between checking if WiFi has connected
 #define WIFI_DOT_INTERVAL_SEC 0.05  // WIFI_DOT_INTERVAL / 1000
@@ -32,8 +40,6 @@
 #define WIFI_SYNC_TRIES 3           // How many attempts we should try if we have to resend data to ensure data integrity
 #define SEND_INTERVAL 5             // How many measurements before trying to send data by WiFi (Time = SLEEP_TIME * SEND_INTERVAL)
 #define OFFLINE_MAX 60              // How many measurements to store in RTC memory (Max RTC memory available is 896 bytes)
-#define SD_POWER_PIN 15             // Since 3.3v pin is occupied by the Si7021
-#define SENSOR_ID 1                 // Unique ID
 
 // Enums
 #define WORK_RECORD 0
@@ -62,8 +68,6 @@ void setup() {
   Serial.begin(115200);
   setCpuFrequencyMhz(80);
   send_str[SEND_STR_LEN * OFFLINE_MAX - 1] = '\0';
-  pinMode(SD_POWER_PIN, OUTPUT);
-  digitalWrite(SD_POWER_PIN, HIGH);
 
   int wakeReason = getWakeReason();
   if (VERBOSE) printWakeReason(wakeReason);
@@ -95,13 +99,27 @@ void setup() {
 }
 
 int doWork(int wakeReason) {
+  float humid = 0;
+  float temp = 0;
+  #if SI7021 == 1
   Weather sensor;
   Wire.begin();
-  //sensor.changeResolution(1);
   if (VERBOSE) printf("Reading sensor ");
   if (VERBOSE) printf("%u:\n", sensor.checkID());
-  float humid = sensor.getRH();
-  float temp = sensor.getTemp();
+  humid = sensor.getRH();
+  temp = sensor.getTemp();
+  #else
+  Wire.begin();
+  Wire.setClock(400000);
+  TMP117 sensor;
+  if (sensor.begin() == true) {
+    Serial.println("Reading from TMP117");
+  } else {
+    Serial.println("TMP117 sensor failed to start");
+  }
+  temp = sensor.readTempC();
+  #endif
+
   if (VERBOSE && FirstWake) Serial.println("First wake!");
 
   struct timeval tv;
@@ -119,6 +137,7 @@ int doWork(int wakeReason) {
   if (FirstWake || OfflineCount % SEND_INTERVAL == 0) {
     if (WiFiConnect()) {
 
+      #if STORE_TIME == 1
       // Update time
       int epoch = WiFiGetTime();
       if (epoch != -1) {
@@ -129,6 +148,7 @@ int doWork(int wakeReason) {
           Serial.printf("Set new time to: %d\n", tv.tv_sec);
         }
       }
+      #endif
 
       bool success = false;
       if (useSD) {
