@@ -114,7 +114,10 @@ def dic_to_graph(data_dic):
             data[sensor_id] = {"datetime": [], "temp": [], "humid": [], "volt": []}
         data[sensor_id]["datetime"].append(datetime_str(get_datetime_here(line['datetime'])))
         data[sensor_id]["temp"].append(line['temp'])
-        data[sensor_id]["humid"].append(line['humid'])
+        if 'humid' in line:
+            data[sensor_id]["humid"].append(line['humid'])
+        else:
+            data[sensor_id]["humid"].append(0)
         if 'volt' in line:
             data[sensor_id]["volt"].append(line['volt'])
         else:

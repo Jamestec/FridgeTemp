@@ -120,6 +120,8 @@ for (id in data) {
 			if (temp[i] < min_temp) { min_temp = temp[i]; }
 			// Do min/max for sections
 			doSections(sections, date, temp[i], TIME_BETWEEN_READS);
+		} else {
+			doSections(sections, date, undefined, TIME_BETWEEN_READS);
 		}
 		// Add data point
 		addDataPoint(date, tempData, humidData, voltData,
@@ -386,7 +388,10 @@ function doSections(sections, date, temp, TIME_BETWEEN_READS) {
 		let endSec = getSectionTime(date);
 		if (endSec in sections) {
 			//sections[endSec].push(date + " " + temp + "<br>");
-			if (temp < sections[endSec]["min"]) {
+			if (sections[endSec]["min"] == undefined && temp != undefined) {
+				sections[endSec]["min"] = temp;
+				sections[endSec]["max"] = temp;
+			} else if (temp < sections[endSec]["min"]) {
 				sections[endSec]["min"] = temp;
 			} else if (temp > sections[endSec]["max"]) {
 				sections[endSec]["max"] = temp;
@@ -423,7 +428,11 @@ function doSectionString(sections) {
 			sectionString += key;
 		}
 		prevSub = sub[0];
-		sectionString += ": " + sections[key]["min"].toFixed(2) + "°C/" + sections[key]["max"].toFixed(2) + "°C";
+		if (sections[key]["min"] == undefined) {
+			sectionString += ": no valid records"
+		} else {
+			sectionString += ": " + sections[key]["min"].toFixed(2) + "°C/" + sections[key]["max"].toFixed(2) + "°C";
+		}
 		if (!("end" in sections[key])) {
 			sectionString += " --- incomplete data</p>";
 		}
