@@ -384,6 +384,7 @@ function doSections(sections, date, temp, TIME_BETWEEN_READS) {
 				"max": temp
 			};
 		}
+		sections[endSec]["start"] = true;
 	} else {
 		let endSec = getSectionTime(date);
 		if (endSec in sections) {
@@ -399,6 +400,11 @@ function doSections(sections, date, temp, TIME_BETWEEN_READS) {
 			if (parseEndSectionString(endSec) - date <= TIME_BETWEEN_READS) {
 				sections[endSec]["end"] = true;
 			}
+		} else {
+			sections[endSec] = {
+				"min": temp,
+				"max": temp
+			};
 		}
 	}
 }
@@ -418,7 +424,7 @@ function doSectionString(sections) {
 	let sectionString = "";
 	let prevSub = "";
 	for (key in sections) {
-		if (!("end" in sections[key])) {
+		if (!("start" in sections[key] && "end" in sections[key])) {
 			sectionString += "<p style=\"color:red\">";
 		}
 		let sub = key.split(" ");
@@ -433,10 +439,15 @@ function doSectionString(sections) {
 		} else {
 			sectionString += ": " + sections[key]["min"].toFixed(2) + "°C/" + sections[key]["max"].toFixed(2) + "°C";
 		}
-		if (!("end" in sections[key])) {
-			sectionString += " --- incomplete data</p>";
+		if (!("start" in sections[key]) && !("end" in sections[key])) {
+			sectionString += " --- incomplete data (start and end)</p>";
+		} else if (!("start" in sections[key])) {
+			sectionString += " --- incomplete data (start)</p>";
+		} else if (!("end" in sections[key])) {
+			sectionString += " --- incomplete data (end)</p>";
+		} else {
+			sectionString += "<br>";
 		}
-		sectionString += "<br>";
 	}
 	return sectionString;
 }
