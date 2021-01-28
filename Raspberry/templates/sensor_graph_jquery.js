@@ -339,7 +339,8 @@ function addDataPoint(date, tempData, humidData, voltData, temp, humid, volt) {
 }
 
 function isGoodTempRead(temp) {
-	return temp > -40; // Specifically, bad temp read is -46.58
+	// Specifically, bad temp read is -46.58 for Si7021 and -0.01 for TMP117
+	return temp > -40 && temp != -0.01;
 }
 
 function isGoodHumidRead(humid) {

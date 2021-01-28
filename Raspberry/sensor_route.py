@@ -57,7 +57,8 @@ def sensor_record(data):
             else:
                 to_print[0] += " <-- not logged (datetime past last log time)"
                 not_logged = True
-            if dic["temp"] < -40:
+            if dic["temp"] < -40 or dic["temp"] == -0.01:
+                # Specifically, bad temp read is -46.58 for Si7021 and -0.01 for TMP117
                 to_print[0] += " <- bad sensor record"
             log_datetime = minus_time(log_datetime)
     for line in to_print:
