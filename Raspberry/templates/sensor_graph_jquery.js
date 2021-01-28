@@ -12,6 +12,8 @@ window.onload = function () {
 const data = {{data}};
 elementChanged = {{elementChanged}};
 let visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
+let sensor_ids = {{sensor_ids}};
+let sensor_unchecked = {{sensor_unchecked}};
 let lines = [];
 // Red, Blue, Orange | Green, Purple, Pink
 const colours = ["#C0504E", "#4F81BC", "#f0a502", "#0ec90e", "#9b15bd", "#f205e6"]
@@ -30,11 +32,11 @@ for (id in data) {
 	let volt = data[id]["volt"];
 
 	// Determine minimum (and max) voltage for axis label
-	let volt_min_temp = Math.min(...volt) - 0.01;
-	if (volt_min_temp > 3.75 || volt_min_temp == 0 - 0.01) {
-		volt_min_temp = 3.75;
+	for (v of volt) {
+		if (v != 0 && v < volt_min) {
+			volt_min = v;
+		}
 	}
-	if (volt_min_temp < volt_min) { volt_min = volt_min_temp; }
 
 	// Setup graph line data stuff
 	let tempData = {
@@ -161,11 +163,36 @@ for (id in data) {
 	lines.push(tempData);
 	lines.push(humidData);
 	lines.push(voltData);
+
 }
 
 // Graph statistics
 document.getElementById("stats").innerHTML = stats;
 
+// Make checkboxes
+for (id of sensor_ids) {
+	let chkLabel = document.createElement('label');
+	chkLabel.htmlFor = "sensor" + id;
+	chkLabel.innerHTML = "Sensor " + id + ":";
+	let checkbox = document.createElement('input');
+	let sens_id = "sensor" + id;
+	checkbox.type = "checkbox";
+	checkbox.id = sens_id;
+	checkbox.className = "sensorCheckbox";
+	checkbox.style.marginRight = "20px";
+	checkbox.checked = true;
+	for (un of sensor_unchecked) {
+		if (un === sens_id) {
+			checkbox.checked = false;
+			break;
+		}
+	}
+	checkbox.onclick = function() {onChanged(sens_id);};
+	document.getElementById("sensors").appendChild(chkLabel);
+	document.getElementById("sensors").appendChild(checkbox);
+}
+
+// Low volt message
 if (low_volt.length > 0) {
 	let loop = document.getElementsByClassName("voltLowWarn");
 	for (item of loop) {

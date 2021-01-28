@@ -104,12 +104,14 @@ def get_data(start_dt=None, end_dt=None):
     return data
 
 def dic_to_graph(data_dic):
-    sensor_id = "00"
     data = {}
+    sensor_ids = []
     for line in data_dic:
-        sensor_id = "00"
+        sensor_id = "0"
         if "id" in line:
             sensor_id = line["id"]
+        if sensor_id not in sensor_ids:
+            sensor_ids.append(sensor_id)
         if sensor_id not in data:
             data[sensor_id] = {"datetime": [], "temp": [], "humid": [], "volt": []}
         data[sensor_id]["datetime"].append(datetime_str(get_datetime_here(line['datetime'])))
@@ -124,7 +126,8 @@ def dic_to_graph(data_dic):
             data[sensor_id]["volt"].append(0)
     for sensor in data:
         data[sensor]["limit"] = len(data[sensor]["temp"])
-    return data
+    sensor_ids = sorted(sensor_ids)
+    return data, sensor_ids
 
 def dic_to_graph_dic(data_dic):
     temp = []

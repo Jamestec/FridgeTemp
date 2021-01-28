@@ -1,19 +1,27 @@
 function submitFromTo() {
 	let url = new URL(window.location.href);
-	const params = document.getElementsByClassName("dt-pick");
-	for (i = 0; i < params.length; i++) {
-		if (elementChanged.includes(params[i].id) && params[i].value != "") {
-			url.searchParams.set(params[i].name, params[i].value);
+	const dt = document.getElementsByClassName("dt-pick");
+	for (let i = 0; i < dt.length; i++) {
+		if (elementChanged.includes(dt[i].id) && dt[i].value != "") {
+			url.searchParams.set(dt[i].name, dt[i].value);
 		} else {
-			url.searchParams.delete(params[i].name);
+			url.searchParams.delete(dt[i].name);
 		}
 	}
-	let loop = ["temp", "humid", "volt"];
+	const loop = ["temp", "humid", "volt"];
 	for (dataSeries of loop) {
 		if (elementChanged.includes(dataSeries)) {
 			url.searchParams.set(dataSeries + "_visible", visible[dataSeries]);
 		} else {
 			url.searchParams.delete(dataSeries + "_visible");
+		}
+	}
+	const sensorCheck = document.getElementsByClassName("sensorCheckbox");
+	for (let i = 0; i < sensorCheck.length; i++) {
+		if (elementChanged.includes(sensorCheck[i].id) && sensorCheck[i].checked == false) {
+			url.searchParams.set(sensorCheck[i].id + "_checked", sensorCheck[i].checked);
+		} else {
+			url.searchParams.delete(sensorCheck[i].id + "_checked");
 		}
 	}
 	window.location.href = url.toString();
