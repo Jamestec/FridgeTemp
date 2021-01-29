@@ -1,9 +1,9 @@
 
 #define TESTING 1
-#define VERBOSE 1
-#define SI7021 1                    // 1 or else we're using the SparkFun TMP117
-#define SENSOR_ID 2                 // Unique ID
-#define STORE_TIME 0                // For ESPs that can't keep track of time
+#define VERBOSE 0
+#define SI7021 0                    // 1 or else we're using the SparkFun TMP117
+#define SENSOR_ID "1"               // Unique ID, 0 is reserved for sensors without an id
+#define STORE_TIME 1                // 0 for ESPs that can't keep track of time
 #include "login.h"
 
 #include "WiFi.h"
@@ -113,9 +113,9 @@ int doWork(int wakeReason) {
   Wire.setClock(400000);
   TMP117 sensor;
   if (sensor.begin() == true) {
-    Serial.println("Reading from TMP117");
+    if (VERBOSE) Serial.println("Reading from TMP117");
   } else {
-    Serial.println("TMP117 sensor failed to start");
+    if (VERBOSE) Serial.println("TMP117 sensor failed to start");
   }
   temp = sensor.readTempC();
   #endif
@@ -143,9 +143,9 @@ int doWork(int wakeReason) {
       if (epoch != -1) {
         tv.tv_sec = epoch;
         if (settimeofday(&tv, NULL) == -1) {
-          Serial.println("Unable to settimeofday()");
+          if (VERBOSE) Serial.println("Unable to settimeofday()");
         } else {
-          Serial.printf("Set new time to: %d\n", tv.tv_sec);
+          if (VERBOSE) Serial.printf("Set new time to: %d\n", tv.tv_sec);
         }
       }
       #endif
@@ -179,7 +179,7 @@ int doWork(int wakeReason) {
         if (WrappedOfflineCount) {
           while (OfflineCountIndex < OFFLINE_MAX) {
             // temp=tttt.tt humid=hhhh.hh wake=r volt=v.vv index=ii id=dd time=eeeeeeeeee\n
-            chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d id=%d time=%d\n",
+            chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d id=%s time=%d\n",
                                          OfflineTemp[OfflineCountIndex], OfflineHumid[OfflineCountIndex], OfflineWake[OfflineCountIndex], OfflineVolt[OfflineCountIndex], OfflineCountIndex, SENSOR_ID, tv.tv_sec);
             OfflineCountIndex += 1;
           }
@@ -187,7 +187,7 @@ int doWork(int wakeReason) {
         OfflineCountIndex = 0;
         while (OfflineCountIndex < OfflineCount) {
           // temp=tttt.tt humid=hhhh.hh wake=r volt=v.vv index=ii id=dd time=eeeeeeeeee\n
-          chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d id=%d time=%d\n",
+          chain += sprintf_P(send_str + chain, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d id=%s time=%d\n",
                                        OfflineTemp[OfflineCountIndex], OfflineHumid[OfflineCountIndex], OfflineWake[OfflineCountIndex], OfflineVolt[OfflineCountIndex], OfflineCountIndex, SENSOR_ID, tv.tv_sec);
           OfflineCountIndex += 1;
         }
@@ -217,7 +217,7 @@ void loop() {}
 // If this returns false, something wrong with SD
 boolean addOffline(float temp, float humid, int wakeReason, float volt, int epoch) {
   if (useSD) {
-    sprintf_P(send_str, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d id=%d time=%d\n", temp, humid, wakeReason, volt, OfflineCount, SENSOR_ID, epoch);
+    sprintf_P(send_str, "temp=%07.2lf humid=%07.2lf wake=%hhd volt=%4.2f index=%d id=%s time=%d\n", temp, humid, wakeReason, volt, OfflineCount, SENSOR_ID, epoch);
     if (!appendFile(getDataPath(), send_str)) {
       return false;
     }

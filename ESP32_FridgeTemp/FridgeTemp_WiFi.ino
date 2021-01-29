@@ -111,9 +111,9 @@ void WiFiSendSDStatus() {
   // line 107 add fillBuffer();
   // else core panic
   if (useSD) {
-    response = http.PUT("true");
+    response = http.PUT("true_"SENSOR_ID);
   } else {
-    response = http.PUT("false");
+    response = http.PUT("false_"SENSOR_ID);
   }
   String temp = http.getString();
   if (VERBOSE && response == 200) Serial.printf("SD http reply: %s\n", temp);
