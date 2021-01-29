@@ -4,10 +4,9 @@ from imports import get_latest_log, line_to_dic, \
                     get_datetime_utc, get_datetime_here, get_datetime_from_timestamp, \
                     date_str, date_folder_str, time_str, datetime_str, \
                     minus_time, get_bool, parent, wake_reason, \
-                    BUFFER, DATA_FOLDER, PACKET_TIMEOUT
+                    sd_stat, BUFFER, DATA_FOLDER, PACKET_TIMEOUT
 
 buffer = []
-sd_stat = True
 
 if not os.path.exists(DATA_FOLDER):
     os.mkdir(DATA_FOLDER)
@@ -36,9 +35,11 @@ def sensor_record(data):
             sensor_id = "00"
             if "id" in dic:
                 sensor_id = dic["id"]
+            ESPTime = False
             if "time" in dic and dic["time"] > get_datetime_utc(get_datetime_from_timestamp(1000000000)) and not dic["time"] == last_time:
                 log_datetime = dic["time"]
                 last_time = log_datetime
+                ESPTime = True
             # Prep to print
             print_str = datetime_str(get_datetime_here(log_datetime))
             for key in dic:
@@ -47,7 +48,7 @@ def sensor_record(data):
             for unknown in dic["unknown"]:
                 print_str += " {}".format(unknown)
             to_print.insert(0, print_str)
-            if sensor_id not in last_log or log_datetime >= last_log[sensor_id]:
+            if ESPTime or sensor_id not in last_log or log_datetime >= last_log[sensor_id]:
                 # Prep to write
                 path = os.path.join(DATA_FOLDER, date_folder_str(log_datetime) + ".txt")
                 content = "{} {}\n".format(time_str(log_datetime), line)
@@ -89,7 +90,7 @@ def sensor_record(data):
             os.makedirs(parent_folder, mode=0o777, exist_ok=True)
         # Write
         with open(path, "a+") as FILE:
-            FILE.write(to_print)
+            FILE.write("\n".join(to_print))
         try:
             os.chmod(path, 0o666)
         except OSError:
@@ -147,5 +148,13 @@ def sensor_packet_reset_record():
 def sd_status_record(data):
     global sd_stat
     print(f"sd_status: {data}")
-    sd_stat = get_bool(data)
+    s = data.split("_")
+    s_id = 0
+    if len(s) > 1:
+        s_id = s[1]
+    if get_bool(s[0]) == False:
+        if s_id not in sd_stat:
+            sd_stat.append(s_id)
+    elif s_id in sd_stat:
+        sd_stat.remove(s_id)
     return data

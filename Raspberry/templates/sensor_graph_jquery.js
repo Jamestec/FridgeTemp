@@ -14,6 +14,7 @@ elementChanged = {{elementChanged}};
 let visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
 let sensor_ids = {{sensor_ids}};
 let sensor_unchecked = {{sensor_unchecked}};
+let sd_status = {{sd_status}};
 let lines = [];
 // Red, Blue, Orange | Green, Purple, Pink
 const colours = ["#C0504E", "#4F81BC", "#f0a502", "#0ec90e", "#9b15bd", "#f205e6"]
@@ -200,6 +201,12 @@ if (low_volt.length > 0) {
 		item.innerHTML = "<br><div style=\"font-size:1.5em;background-color:yellow;margin-right:1em\">Please charge the battery of "
 				+ low_volt + "</div></div>";
 	}
+}
+
+// SD card status
+if (sd_status.length > 0) {
+	document.getElementById("sd_status").innerHTML = "SD card malfunction: " + sd_status;
+	document.getElementById("sd_status").style.display = "inline";
 }
 
 // Set graph options/assign data
