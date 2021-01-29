@@ -24,6 +24,7 @@ let volt_min = 3.75;
 const volt_max = 4.25;
 let stats = "";
 let low_volt = [];
+let sections_all = {};
 
 for (id in data) {
 	let limit = data[id]["limit"];
@@ -122,9 +123,11 @@ for (id in data) {
 			if (temp[i] > max_temp) { max_temp = temp[i]; }
 			if (temp[i] < min_temp) { min_temp = temp[i]; }
 			// Do min/max for sections
+			doSections(sections_all, date, temp[i], TIME_BETWEEN_READS);
 			doSections(sections, date, temp[i], TIME_BETWEEN_READS);
 		} else {
 			doSections(sections, date, undefined, TIME_BETWEEN_READS);
+			doSections(sections_all, date, undefined, TIME_BETWEEN_READS);
 		}
 		// Add data point
 		addDataPoint(date, tempData, humidData, voltData,
@@ -142,7 +145,7 @@ for (id in data) {
 					undefined, undefined, undefined);
 	}
 
-	stats += "<b>Sensor " + id + "<br>Total date range stats:</b><br>Temperature min/max: " + min_temp + "°C/" + max_temp + "°C" + "<br><br>"
+	stats += "<b>Sensor " + id + "<br>Total date range stats:</b><br>Temperature min/max: " + min_temp + "°C/" + max_temp + "°C" + "<br>"
 	+ "<b>Sections:</b><br>" + doSectionString(sections) + "<br>";
 
 	// Battery low voltage warning
@@ -168,7 +171,9 @@ for (id in data) {
 }
 
 // Graph statistics
-document.getElementById("stats").innerHTML = stats;
+document.getElementById("stats").innerHTML = "<b>All Graph<br>Total date range stats:</b><br>Temperature min/max: " + min_temp + "°C/" + max_temp + "°C" + "<br>"
+	+ "<b>Sections:</b><br>" + doSectionString(sections_all) + "<br><br>";
+document.getElementById("stats").innerHTML += stats;
 
 // Make checkboxes
 for (id of sensor_ids) {
@@ -460,7 +465,7 @@ function doSectionString(sections) {
 	let prevSub = "";
 	for (key in sections) {
 		if (!("start" in sections[key] && "end" in sections[key])) {
-			sectionString += "<p style=\"color:red\">";
+			sectionString += "<span style=\"color:red\">";
 		}
 		let sub = key.split(" ");
 		if (prevSub == sub[0]) {
@@ -475,14 +480,13 @@ function doSectionString(sections) {
 			sectionString += ": " + sections[key]["min"].toFixed(2) + "°C/" + sections[key]["max"].toFixed(2) + "°C";
 		}
 		if (!("start" in sections[key]) && !("end" in sections[key])) {
-			sectionString += " --- incomplete data (start and end)</p>";
+			sectionString += " --- incomplete data (start and end)</span>";
 		} else if (!("start" in sections[key])) {
-			sectionString += " --- incomplete data (start)</p>";
+			sectionString += " --- incomplete data (start)</span>";
 		} else if (!("end" in sections[key])) {
-			sectionString += " --- incomplete data (end)</p>";
-		} else {
-			sectionString += "<br>";
+			sectionString += " --- incomplete data (end)</span>";
 		}
+		sectionString += "<br>";
 	}
 	return sectionString;
 }
