@@ -123,12 +123,12 @@ def sensor_packet_record(data):
     if packet_count == 0:
         packet_time = get_datetime_utc()
     if ((get_datetime_utc() - packet_time).total_seconds() > PACKET_TIMEOUT):
-        print(f"Packet timed out: {(get_datetime_utc() - packet_time).total_seconds()}\n")
+        print("Packet timed out: {}\n".format((get_datetime_utc() - packet_time).total_seconds()))
         sensor_packet_fin_record()
     packet_count += 1
     packet += data
     packet_time = get_datetime_utc()
-    print(f"packet {packet_count}:\n{data}")
+    print("packet {}:\n{}".format(packet_count, data))
     return str(packet_count)
 
 def sensor_packet_fin_record():
@@ -147,7 +147,7 @@ def sensor_packet_reset_record():
 
 def sd_status_record(data):
     global sd_stat
-    print(f"sd_status: {data}")
+    print("sd_status: {}".format(data))
     s = data.split("_")
     s_id = 0
     if len(s) > 1:
