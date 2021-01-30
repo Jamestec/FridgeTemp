@@ -128,7 +128,6 @@ def sensor_packet_record(data):
     packet_count += 1
     packet += data
     packet_time = get_datetime_utc()
-    print("packet {}:\n{}".format(packet_count, data))
     return str(packet_count)
 
 def sensor_packet_fin_record():
@@ -147,7 +146,6 @@ def sensor_packet_reset_record():
 
 def sd_status_record(data):
     global sd_stat
-    print("sd_status: {}".format(data))
     s = data.split("_")
     s_id = 0
     if len(s) > 1:

@@ -29,12 +29,10 @@ def sensor_packet():
 
 @app.route('/sensor_packet_fin', methods=["PUT", "GET"])
 def sensor_packet_fin():
-    print("packet_fin")
     return sensor_packet_fin_record()
 
 @app.route('/sensor_packet_reset', methods=["PUT", "GET"])
 def sensor_packet_reset():
-    print("packet_reset")
     return sensor_packet_reset_record()
 
 @app.route('/sd_status', methods=["PUT", "GET"])
