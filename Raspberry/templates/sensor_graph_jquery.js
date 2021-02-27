@@ -22,6 +22,8 @@ let colours_i = 0;
 let colours_len = 6;
 let volt_min = 3.75;
 const volt_max = 4.25;
+let min_temp_g = 500;
+let max_temp_g = -500;
 let stats = "";
 let low_volt = [];
 let sections_all = {};
@@ -105,8 +107,8 @@ for (id in data) {
 			TIME_BETWEEN_READS = sample;
 		}
 	}
-	min_temp = 500;
-	max_temp = -500;
+	let min_temp = 500;
+	let max_temp = -500;
 	const THRESHOLD = TIME_BETWEEN_READS / 3;
 	let sections = {};
 	// Loop to fill data points (line data stuff) + other
@@ -137,6 +139,13 @@ for (id in data) {
 	// There were no good sensor reads :(, no min/max
 	if (min_temp == 500) min_temp = undefined;
 	if (max_temp == -500) max_temp = undefined;
+	if (min_temp != undefined && min_temp < min_temp_g) {
+		min_temp_g = min_temp;
+	}
+	if (max_temp != undefined && max_temp > max_temp_g) {
+		max_temp_g = max_temp;
+	}
+
 	// Fluff the last sensor to now so there's space on graph
 	let endDate = new Date(document.getElementById("toDate").value + " "+
 				document.getElementById("toTime").value);
@@ -171,7 +180,7 @@ for (id in data) {
 }
 
 // Graph statistics
-document.getElementById("stats").innerHTML = "<b>All Graph<br>Total date range stats:</b><br>Temperature min/max: " + min_temp + "°C/" + max_temp + "°C" + "<br>"
+document.getElementById("stats").innerHTML = "<b>All Graph<br>Total date range stats:</b><br>Temperature min/max: " + min_temp_g + "°C/" + max_temp_g + "°C" + "<br>"
 	+ "<b>Sections:</b><br>" + doSectionString(sections_all) + "<br><br>";
 document.getElementById("stats").innerHTML += stats;
 
