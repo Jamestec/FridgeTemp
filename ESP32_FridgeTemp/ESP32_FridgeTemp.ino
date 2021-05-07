@@ -1,9 +1,10 @@
 
 #define TESTING 1
-#define VERBOSE 0
+#define VERBOSE 1
 #define SI7021 0                    // 1 or else we're using the SparkFun TMP117
-#define SENSOR_ID "1"               // Unique ID, 0 is reserved for sensors without an id
+#define SENSOR_ID "3"               // Unique ID, 0 is reserved for sensors without an id
 #define STORE_TIME 1                // 0 for ESPs that can't keep track of time
+
 #include "login.h"
 
 #include "WiFi.h"
@@ -61,8 +62,24 @@ RTC_DATA_ATTR float OfflineVolt[OFFLINE_MAX];
 char send_str[SEND_STR_LEN * OFFLINE_MAX];
 int httpResponse = -1;
 
-float getBatteryVoltage(int analogVal=0);
-void printWakeReason(int wakeReason=-1);
+// Kill me
+float getBatteryVoltage(int analogVal);
+void doDeepSleep(int sleepSeconds);
+int getWakeReason();
+void printWakeReason(int wakeReason);
+void showTemp(float temp, float humid, int trigger, float batVolt, int workReturn);
+char *getDataPath();
+int sendData(char *dataLoc, char *buff);
+bool appendFile(char *path, char *message);
+void removeFile(char *path);
+void SDEnd();
+bool WiFiConnect();
+int WiFiSend(char *address, char *toSend);
+int WiFiSendPacket(char *address, char *toSend);
+boolean WiFiSendPacketReset();
+void WiFiSendSDStatus();
+int WiFiGetTime();
+void WiFiEnd();
 
 void setup() {
   Serial.begin(115200);
@@ -128,10 +145,10 @@ int doWork(int wakeReason) {
   }
 
   if (VERBOSE) Serial.printf("temp=%07.2lf humid=%07.2lf wake=%d OfflineCount=%d time=%d\n", temp, humid, wakeReason, OfflineCount, tv.tv_sec);
-  if (!addOffline(temp, humid, wakeReason, getBatteryVoltage(), tv.tv_sec)) {
+  if (!addOffline(temp, humid, wakeReason, getBatteryVoltage(NULL), tv.tv_sec)) {
     if (VERBOSE) Serial.println("addOffline failed, not using SD");
     switchOffSD();
-    addOffline(temp, humid, wakeReason, getBatteryVoltage(), tv.tv_sec);
+    addOffline(temp, humid, wakeReason, getBatteryVoltage(NULL), tv.tv_sec);
   }
 
   if (FirstWake || OfflineCount % SEND_INTERVAL == 0) {

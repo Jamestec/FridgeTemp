@@ -6,6 +6,8 @@
 
 bool SDBegan = false;
 
+boolean WiFiSendPacketFin();
+
 char *getLogPath() {
   return "/log.txt";
 }
