@@ -3,6 +3,8 @@ Wireless and automatic fridge temperature monitoring with an ESP32 and Raspberry
 
 ESP32_FridgeTemp.ino is main code for ESP32. The board I'm using is the Lolin D32 Pro and the sensor is a Si7021 to TMP117. There is usable EPD code for the is Wemos EPD (it sucks since the MISO cable isn't used and could've carried BUSY instead), but I'm currently not using it.
 
+The Lolin D32 (non-pro) uses less power during deep sleep (from memory, pro vs non-pro: 120uA vs 80uA). Using a micro-sd with the pro uses about 0.5mA during deep sleep (this is with Arduino-esp32 version 1.05 or higher, prior to this, it used a lot more as it doesn't "sleep"). The Sparkfun TMP117's LED uses about 1.7mA, after cutting the trace, I could not measure its current usage during deep sleep.
+
 If you're using a Sparkfun TMP117, it is possible to use the I2C port on the Lolin D32 Pro with Sparkfun's Qwiic connectors, but you'll have to rearrange some wires.
 <details>
   <summary>Instructions on rearranging a wire</summary>
