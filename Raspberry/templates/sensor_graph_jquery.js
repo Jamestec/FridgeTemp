@@ -35,7 +35,6 @@ for (id in data) {
 	let humid = data[id]["humid"];
 	let volt = data[id]["volt"];
 
-
 	// Determine minimum (and max) voltage for axis label
 	for (v of volt) {
 		if (v != 0 && v < volt_min) {
