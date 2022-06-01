@@ -11,7 +11,7 @@ window.onload = function () {
 
 const data = {{data}};
 elementChanged = {{elementChanged}};
-let visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
+visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
 let sensor_ids = {{sensor_ids}};
 let sensor_unchecked = {{sensor_unchecked}};
 let sd_status = {{sd_status}};
@@ -293,15 +293,12 @@ function toggleDataSeries(e) {
 		switch (e.dataSeries.name) {
 			case "Temperature":
 				e.chart.axisY[0].set("stripLines", []);
-				onChanged("temp");
 				break;
 			case "Humidity":
-				onChanged("humid");
 				break;
 			case "Battery Voltage":
 				e.chart.axisY2[1].set("minimum", 0);
 				e.chart.axisY2[1].set("maximum", 0);
-				onChanged("volt");
 				break;
 		}
 	} else {
@@ -312,19 +309,17 @@ function toggleDataSeries(e) {
 					{value:2, color:"red", thickness:3},
 					{value:8, color:"red", thickness:3},
 				]);
-				onChanged("temp");
 				break;
 			case "Humidity":
-				onChanged("humid");
 				break;
 			case "Battery Voltage":
 				e.chart.axisY2[1].set("minimum", volt_min);
 				e.chart.axisY2[1].set("maximum", volt_max);
-				onChanged("volt");
 				break;
 		}
 	}
 	e.dataSeries.visible = visible[e.dataSeries.id];
+	onChanged(e.dataSeries.id);
 	e.chart.render();
 	remURL();
 }
