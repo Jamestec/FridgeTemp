@@ -9,7 +9,7 @@ window.onload = function () {
 	   "another sensor":...
 	}*/
 
-const data = {{data}};
+data = {{data}};
 elementChanged = {{elementChanged}};
 visible = {temp: {{temp_visible}}, humid: {{humid_visible}}, volt: {{volt_visible}}};
 let sensor_ids = {{sensor_ids}};
@@ -34,7 +34,7 @@ for (id in data) {
 	let temp = data[id]["temp"];
 	let humid = data[id]["humid"];
 	let volt = data[id]["volt"];
-	let textData = []
+
 
 	// Determine minimum (and max) voltage for axis label
 	for (v of volt) {
@@ -135,16 +135,7 @@ for (id in data) {
 		// Add data point
 		addDataPoint(date, tempData, humidData, voltData,
 				temp[i], humid[i], volt[i]);
-		// Add text output (TODO: beta)
-		textData.push({date:date, temp:temp[i]});
 		prevDate = date;
-	}
-	// Add text output (TODO: beta)
-	textData.sort(function(a,b){
-		return new Date(a.date) - new Date(b.date);
-	});
-	for (i in textData) {
-		document.getElementById("textDiv").innerText += textData[i].date + ": " + textData[i].temp + "°C\n";
 	}
 	// There were no good sensor reads :(, no min/max
 	if (min_temp == 500) min_temp = undefined;

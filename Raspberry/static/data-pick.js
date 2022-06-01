@@ -61,3 +61,27 @@ function nextDay() {
 	document.getElementById("toDate").stepUp(1);
 	onChanged("toDate");
 }
+
+function showTextVersion() {
+	// Add text output (TODO: beta)
+	document.getElementById("textDiv").innerText = ""
+	document.getElementById("btnText").innerText = "Loading...";
+	document.getElementById("btnText").disabled = true;
+	for (id in data) {
+		let limit = data[id]["limit"];
+		let times = data[id]["datetime"];
+		let temp = data[id]["temp"];
+		for (let i = 0; i < limit; i += 1) {
+			let date = new Date(times[i]);
+			let textData = []	
+			textData.push({date:date, temp:temp[i]});
+			textData.sort(function(a,b){
+				return new Date(a.date) - new Date(b.date);
+			});
+			for (x in textData) {
+				document.getElementById("textDiv").innerText += textData[x].date + ": " + textData[x].temp + "°C\n";
+			}
+		}
+	}
+	document.getElementById("btnText").innerText = "Finished";
+}
