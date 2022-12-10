@@ -1,5 +1,5 @@
 DATA_FOLDER = 'FridgeTemp/Raspberry/sensor'
-TIME_BETWEEN_READS = 180 # Seconds
+TIME_BETWEEN_READS = 300 # Seconds
 PACKET_TIMEOUT = 120 # Seconds
 BUFFER = 20 * 24 # Whole day's worth
 VISIBLE_KEYS = ("temp_visible", "humid_visible", "volt_visible")
